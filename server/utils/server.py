@@ -1,6 +1,7 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 from scrape import getData
+from search import searchTitle
 
 URL_TOP_MOVIE = "https://www.imdb.com/chart/top/"
 URL_POP_MOVIE = "https://www.imdb.com/chart/moviemeter/"
@@ -29,6 +30,13 @@ def getTopShows():
 def getPopShows():
     pop_shows = getData(URL_POP_SHOW, "show")
     return jsonify( pop_shows )
+
+@app.route("/search")
+def search():
+    title = request.args.get('q')
+    searchResult = searchTitle(title)
+    return jsonify( searchResult )
+
 
 if __name__ == "__main__":
     app.run(debug=True)
