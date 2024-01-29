@@ -24,6 +24,7 @@ def searchTitle(title):
         
         dict_data = {}
 
+
         try:
             title_type = data["titleType"]["id"]
             certificate = data["certificate"]
