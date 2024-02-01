@@ -1,6 +1,10 @@
 package com.movie.server.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.movie.server.model.User;
+import com.movie.server.model.View;
 import com.movie.server.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +32,7 @@ public class UserController {
     }
 
     @GetMapping("")
+    @JsonView(View.Default.class)
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUsers();
         return ResponseEntity.ok().body(users);

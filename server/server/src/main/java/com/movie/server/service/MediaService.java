@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class MediaService {
@@ -32,14 +33,18 @@ public class MediaService {
         return new ArrayList<>();
     }
 
+
+    // pegar todos os usuarios do media -> pegar o ID de cada usuario -> comparar se existe no repostorio. Se todos existirem, faz a operacao. Caso contrario, exception.
     public Media createMedia(Media media) {
         List<User> user = media.getUsers();
-        for (User u : user) {
-            if ( userRepository.findUserByUsername(u.getUsername()).get() == u ) {
-                return mediaRepository.save(media);
-            }
+        int numberOfElementsThatExists = user.stream().filter(u -> userRepository.existsById(u.getId())).toList().size();
+        if (user.size() != numberOfElementsThatExists) {
+            throw new ObjectNotFoundException("Media contains users that do not exist", media);
         }
-        throw new ObjectNotFoundException("Media must have a user to be created with", media);
+        return mediaRepository.save(media);
     }
 
+    public List<Media> getAllMedias() {
+        return mediaRepository.findAll();
+    }
 }
