@@ -1,0 +1,5 @@
+FROM openjdk:21
+VOLUME /tmp
+EXPOSE 8080
+COPY target/server-0.0.1-SNAPSHOT.jar movie-app.jar
+ENTRYPOINT ["java","-jar","/movie-app.jar"]
