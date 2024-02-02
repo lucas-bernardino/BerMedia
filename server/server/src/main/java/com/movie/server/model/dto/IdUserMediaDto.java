@@ -1,9 +1,8 @@
-package com.movie.server.model;
+package com.movie.server.model.dto;
 
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
-public record AddUserMedia(
+public record IdUserMediaDto(
         @NotNull String imdbId,
         @NotNull Long userId
 ) {}
