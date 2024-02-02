@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class MediaService {
@@ -46,5 +45,20 @@ public class MediaService {
 
     public List<Media> getAllMedias() {
         return mediaRepository.findAll();
+    }
+
+    public void addUserToMedia(String imdbId, Long userId) {
+        Media media = mediaRepository.findByImdbId(imdbId);
+        if (media == null) {
+            throw new ObjectNotFoundException(Optional.of("Media not found by id: "), imdbId);
+        }
+        Optional<User> newUser = userService.getUserById(userId);
+        if (newUser.isEmpty()) {
+            throw new ObjectNotFoundException(Optional.of("User not found by id: "), String.valueOf(userId));
+        };
+        List<User> mediaUsers = media.getUsers();
+        mediaUsers.add(newUser.get());
+        media.setUsers(mediaUsers);
+        mediaRepository.save(media);
     }
 }
