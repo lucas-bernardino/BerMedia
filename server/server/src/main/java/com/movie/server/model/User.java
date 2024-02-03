@@ -46,6 +46,7 @@ public class User implements UserDetails {
     private List<Media> medias;
 
     @Enumerated(EnumType.STRING)
+    @JsonView({View.Default.class, View.Test.class})
     private Role role;
 
     public User(String username, String password, Role role) {
