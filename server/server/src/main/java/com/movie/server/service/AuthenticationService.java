@@ -39,24 +39,25 @@ public class AuthenticationService implements UserDetailsService {
         return userRepository.findByUsername(username);
     }
 
-    public ResponseEntity<Object> login(@RequestBody @Valid AuthenticationDTO authenticationDTO) {
+    public LoginResponseDto login(@RequestBody @Valid AuthenticationDTO authenticationDTO) {
+
         authenticationManager = applicationContext.getBean(AuthenticationManager.class);
 
         var userAuth = new UsernamePasswordAuthenticationToken(authenticationDTO.username(), authenticationDTO.password());
         var auth = authenticationManager.authenticate(userAuth);
         String token = tokenService.generateToken((User) auth.getPrincipal());
 
-        return ResponseEntity.ok(new LoginResponseDto(token));
+        return new LoginResponseDto(token);
     }
 
-    public ResponseEntity<Object> register(@RequestBody @Valid RegisterDto registerDto) {
+    public User register(@RequestBody @Valid RegisterDto registerDto) {
         if (userRepository.findByUsername(registerDto.username()) != null) {
-            return ResponseEntity.badRequest().build();
+            return null;
         }
         String encryptedPassword = new BCryptPasswordEncoder().encode(registerDto.password());
         User newUser = new User(registerDto.username(), encryptedPassword, registerDto.role() != null ? registerDto.role() : Role.valueOf("USER"));
         userRepository.save(newUser);
-        return ResponseEntity.ok().build();
+        return newUser;
     }
 
     public User getUser(String token) {

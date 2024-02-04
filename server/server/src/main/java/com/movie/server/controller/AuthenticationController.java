@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonView;
 import com.movie.server.model.User;
 import com.movie.server.model.View;
 import com.movie.server.model.dto.AuthenticationDTO;
+import com.movie.server.model.dto.LoginResponseDto;
 import com.movie.server.model.dto.RegisterDto;
 import com.movie.server.service.AuthenticationService;
 import jakarta.validation.Valid;
@@ -22,14 +23,18 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<Object> login (@RequestBody @Valid AuthenticationDTO authenticationDTO) {
-        return authenticationService.login(authenticationDTO);
+    public ResponseEntity<LoginResponseDto> login (@RequestBody @Valid AuthenticationDTO authenticationDTO) {
+        LoginResponseDto loginResponseDto = authenticationService.login(authenticationDTO);
+        return ResponseEntity.ok().body(loginResponseDto);
     }
 
     @PostMapping(value = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Object> register (@RequestBody @Valid RegisterDto registerDto) {
-        System.out.println("REGISTER DTO: " + registerDto.username() + registerDto.password());
-        return authenticationService.register(registerDto);
+    public ResponseEntity<Void> register (@RequestBody @Valid RegisterDto registerDto) {
+        User user = authenticationService.register(registerDto);
+        if (user == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping("/me")
