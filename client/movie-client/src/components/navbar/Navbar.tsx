@@ -9,6 +9,7 @@ function Navbar() {
 
   const navigate = useNavigate();
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleNavigate = (e: any) => {
     const title: string = e.target.title.value;
 

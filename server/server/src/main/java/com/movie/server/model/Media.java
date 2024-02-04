@@ -28,6 +28,10 @@ public class Media {
     @JsonView({View.Default.class, View.Test.class})
     private String title;
 
+    @Column(name = "imdbId")
+    @JsonView({View.Default.class, View.Test.class})
+    private String imdbId;
+
     @Column(name = "plot")
     @JsonView({View.Default.class, View.Test.class})
     private String plot;

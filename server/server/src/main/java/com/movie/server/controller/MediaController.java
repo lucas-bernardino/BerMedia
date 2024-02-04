@@ -1,13 +1,9 @@
 package com.movie.server.controller;
 
 
-import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ser.FilterProvider;
-import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
-import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.movie.server.model.dto.IdUserMediaDto;
 import com.movie.server.model.Media;
 import com.movie.server.model.View;
 import com.movie.server.service.MediaService;
@@ -16,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -33,6 +28,12 @@ public class MediaController {
     @PostMapping("")
     public ResponseEntity<Void> createMedia(@RequestBody @Valid Media media) {
         mediaService.createMedia(media);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/newuser") // futuramente será passado um token e nao o id do usuario, mas por hora deixar assim
+    public ResponseEntity<Void> addNewUserToMedia(@RequestBody @Valid IdUserMediaDto UserMediaObject) {
+        mediaService.addUserToMedia(UserMediaObject.imdbId(), UserMediaObject.userId());
         return ResponseEntity.ok().build();
     }
 
