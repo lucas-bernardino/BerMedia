@@ -1,14 +1,67 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useUser } from "../../utils/useUserHook";
+import { useState } from "react";
+import { setTokenLocalStorage } from "../../utils/helpers";
+
+interface IForm {
+  username: string;
+  password: string;
+}
 
 function SignIn() {
+  const navigate = useNavigate();
+  const user = useUser();
+  if (user) {
+    navigate("/");
+  }
+
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+
+  const [message, setMessage] = useState<boolean>(false);
+
+  const signIn = async (e: any) => {
+    e.preventDefault();
+    const userForm: IForm = { username, password };
+    const response = await fetch("http://localhost:8080/auth/login", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(userForm),
+    });
+    const text = response.status;
+    if (text == 200) {
+      const token = (await response.json()).token;
+      setTokenLocalStorage(token);
+      navigate("/");
+    }
+    if (text == 403) {
+      setMessage(true);
+      setTimeout(() => {
+        setMessage(false);
+      }, 2000);
+    }
+  };
+
   return (
     <>
       <div className="flex bg-gradient-to-b from-gray-950 to-slate-800 h-dvh content-center justify-center ">
         <div className="flex flex-col border-2 w-4/12 h-5/6 rounded-3xl border-white items-center self-center">
+          {message ? (
+            <div className="text-slate-50 font-bold fixed w-[270px] h-[70px] border border-black bg-red-700 rounded-3xl text-center mt-3 flex items-center justify-center">
+              INCORRECT USERNAME OR PASSWORD
+            </div>
+          ) : (
+            ""
+          )}
           <div className="flex text-5xl text-slate-100 font-abel mt-28">
             Login
           </div>
-          <div className="flex w-1/2 h-20 mt-20 flex-col">
+          <form
+            className="flex w-1/2 h-20 mt-20 flex-col"
+            onChange={(e: any) => setUsername(e.target.value)}
+          >
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Username
             </label>
@@ -18,8 +71,11 @@ function SignIn() {
               placeholder="John"
               required
             />
-          </div>
-          <div className="flex w-1/2 h-20 mt-14 flex-col">
+          </form>
+          <form
+            className="flex w-1/2 h-20 mt-14 flex-col"
+            onChange={(e: any) => setPassword(e.target.value)}
+          >
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Password
             </label>
@@ -29,8 +85,11 @@ function SignIn() {
               placeholder="*********"
               required
             />
-          </div>
-          <button className="flex w-1/2 h-20 mt-24 border-[1px] rounded-full justify-center items-center text-3xl font-semibold text-white bg-sky-400 bg-opacity-30 hover:bg-opacity-20">
+          </form>
+          <button
+            className="flex w-1/2 h-20 mt-24 border-[1px] rounded-full justify-center items-center text-3xl font-semibold text-white bg-sky-400 bg-opacity-30 hover:bg-opacity-20"
+            onClick={signIn}
+          >
             LOGIN
           </button>
           <div className="flex w-fit h-20 mt-14 flex-col ml-72">
@@ -53,4 +112,3 @@ function SignIn() {
 }
 
 export default SignIn;
-
