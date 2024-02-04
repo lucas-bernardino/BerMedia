@@ -42,6 +42,7 @@ function Search() {
 
   useEffect(() => {
     getDataFromTitle();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state]);
 
   return (
