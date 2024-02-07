@@ -50,20 +50,17 @@ public class Media {
     @JsonView({View.Default.class, View.Test.class})
     private List<String> genre;
 
-    @ElementCollection
-    @CollectionTable(name = "media_length", joinColumns = @JoinColumn(name = "media_id"))
-    @MapKeyColumn(name = "unit")
-    @Column(name = "value")
+    @Column(name = "length")
     @JsonView({View.Default.class, View.Test.class})
-    private Map<String, Integer> length = new HashMap<>();
+    private Integer length;
+
+    @Column(name = "score")
+    @JsonView({View.Default.class, View.Test.class})
+    private Float score;
 
     @Column(name = "rank")
     @JsonView({View.Default.class, View.Test.class})
-    private Float rank;
-
-    @Column(name = "ranking")
-    @JsonView({View.Default.class, View.Test.class})
-    private Float ranking;
+    private Integer rank;
 
     @Column(name = "titleType")
     @JsonView({View.Default.class, View.Test.class})

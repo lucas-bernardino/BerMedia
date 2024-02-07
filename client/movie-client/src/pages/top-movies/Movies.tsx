@@ -1,36 +1,19 @@
 import { useEffect, useState } from "react";
-import MovieCard from "../../components/card/MovieCard";
-
-interface ILength {
-  hour: number,
-  min: number
-}
-
-interface IMovie {
-  id: string,
-  url: string,
-  title: string,
-  rank: number,
-  plot: string,
-  genre: string,
-  rating: number,
-  year: number,
-  length: ILength
-}
+import Card from "../../components/card/Card";
+import { IMedia } from "../../utils/interfaces";
 
 interface IProps {
-  type: string
+  type: string;
 }
 
 function Movies({ type }: IProps) {
-  const [movies, setMovies] = useState<IMovie[] | null>();
+  const [movies, setMovies] = useState<IMedia[] | null>();
 
   const getMovies = async (opt: string) => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/${opt}movies`);
       const data = await response.json();
       setMovies(data);
-      console.log(data);
     } catch (error) {
       setMovies(null);
     }
@@ -42,10 +25,9 @@ function Movies({ type }: IProps) {
 
   return (
     <>
-      {movies ? (
-        movies.map((movie) => (
-          <MovieCard movie={movie} key={movie.id}/>
-          ))) : "" }
+      {movies
+        ? movies.map((movie) => <Card media={movie} key={movie.imdbId} />)
+        : ""}
     </>
   );
 }

@@ -24,7 +24,6 @@ def searchTitle(title):
         
         dict_data = {}
 
-
         try:
             title_type = data["titleType"]["id"]
             certificate = data["certificate"]
@@ -34,9 +33,7 @@ def searchTitle(title):
             image = data["primaryImage"]["url"]
             rating = data["ratingSummary"]["aggregateRating"]
             id = data["titleId"]
-            horas = data["runtime"] // 3600
-            minut = int(((data["runtime"] / 3600) % horas) * 60)
-            if horas == 0: minut = int(((data["runtime"] / 3600)) * 60) 
+            runtime = data["runtime"]
             
             year_end = 0
             year_start = 0
@@ -50,21 +47,22 @@ def searchTitle(title):
 
             foo = ""
             for item in genres: foo += item + ", "
-            genre = foo[0:-2]
+            genre = data["genres"]
 
             dict_data = {
-                "id": id,
-                "url": image,
                 "title": title,
-                "rank": rating,
+                "imdbId": id,
                 "plot": plot,
-                "genre": genre,
-                "rating": rating,
-                "year_start": year_start,
-                "year_end": year_end,
+                "pictureUrl": image,
                 "certificate": certificate,
-                "length": {"hour": horas, "min": minut},
-                "title_type": title_type,
+                "genre": genre,
+                "length": runtime,
+                "score": rating,
+                "rank": 1,
+                "titleType": title_type,
+                "yearStart": year_start,
+                "yearEnd": year_end,
+                "users": []
             }
 
             list_data.append(dict_data)
@@ -75,3 +73,6 @@ def searchTitle(title):
 
     return list_data
 
+if __name__ == "__main__":
+    print(searchTitle("dark"))
+    # __import__('pprint').pprint(searchTitle("godfather"))
