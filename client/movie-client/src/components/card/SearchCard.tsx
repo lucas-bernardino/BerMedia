@@ -1,8 +1,10 @@
-import { FaStar } from "react-icons/fa";
+import { FaCommentAlt, FaStar } from "react-icons/fa";
 import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
 import { BiSolidCameraMovie } from "react-icons/bi";
 import { FaClock } from "react-icons/fa";
+import { AiFillLike } from "react-icons/ai";
+import { RiSaveFill } from "react-icons/ri";
 
 interface ILength {
   hour: number;
@@ -90,6 +92,17 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
                 {titleInfo.length.hour}h : {titleInfo.length.min}min
               </div>
+            </div>
+          </div>
+          <div className="flex w-full items-center justify-around opacity-0 group-hover:opacity-100">
+            <div>
+              <AiFillLike className="size-5 hover:scale-125 ease-in duration-75" />
+            </div>
+            <div>
+              <FaCommentAlt className="size-4 hover:scale-125 ease-in duration-75" />
+            </div>
+            <div>
+              <RiSaveFill className="size-6 hover:scale-125 ease-in duration-75" />
             </div>
           </div>
         </div>

@@ -1,6 +1,8 @@
-import { FaStar } from "react-icons/fa";
+import { AiFillLike } from "react-icons/ai";
+import { FaCommentAlt, FaStar } from "react-icons/fa";
 import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
+import { RiSaveFill } from "react-icons/ri";
 
 interface IShow {
   id: string;
@@ -67,6 +69,17 @@ function ShowCard({ show }: IProps) {
               </div>
             </div>
           </div>
+          <div className="flex w-full items-center justify-around opacity-0 group-hover:opacity-100">
+            <div>
+              <AiFillLike className="size-5 hover:scale-125 ease-in duration-75" />
+            </div>
+            <div>
+              <FaCommentAlt className="size-4 hover:scale-125 ease-in duration-75" />
+            </div>
+            <div>
+              <RiSaveFill className="size-6 hover:scale-125 ease-in duration-75" />
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -74,4 +87,3 @@ function ShowCard({ show }: IProps) {
 }
 
 export default ShowCard;
-
