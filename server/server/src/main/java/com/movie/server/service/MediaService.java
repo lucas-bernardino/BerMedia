@@ -61,4 +61,8 @@ public class MediaService {
         media.setUsers(mediaUsers);
         mediaRepository.save(media);
     }
+
+    public Media getMediaByImdbId(String id) {
+        return mediaRepository.findByImdbId(id);
+    }
 }
