@@ -31,29 +31,42 @@ function ShowCard({ media }: IProps) {
       return;
     }
     const token = getTokenLocalStorage();
-    const createMediaResponse = await fetch("http://localhost:8080/media", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token as string}`,
+
+    const getMediaResponse = await fetch(
+      `http://localhost:8080/media/${media.imdbId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token as string}`,
+        },
       },
-      body: JSON.stringify({
-        title: media.title,
-        imdbId: media.imdbId,
-        plot: media.plot,
-        pictureUrl: media.pictureUrl,
-        certificate: media.certificate,
-        genre: media.genre,
-        length: media.length,
-        score: media.score,
-        rank: media.rank,
-        titleType: media.titleType,
-        yearStart: media.yearStart,
-        yearEnd: media.yearEnd,
-        users: media.users,
-      }),
-    });
-    //TODO: verify if media exists before creating it
+    );
+
+    if (getMediaResponse.status === 404) {
+      await fetch("http://localhost:8080/media", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token as string}`,
+        },
+        body: JSON.stringify({
+          title: media.title,
+          imdbId: media.imdbId,
+          plot: media.plot,
+          pictureUrl: media.pictureUrl,
+          certificate: media.certificate,
+          genre: media.genre,
+          length: media.length,
+          score: media.score,
+          rank: media.rank,
+          titleType: media.titleType,
+          yearStart: media.yearStart,
+          yearEnd: media.yearEnd,
+          users: media.users,
+        }),
+      });
+    }
     const addUserResponse = await fetch("http://localhost:8080/media/newuser", {
       method: "POST",
       headers: {
@@ -65,12 +78,7 @@ function ShowCard({ media }: IProps) {
         userId: user.id,
       }),
     });
-    const json = await createMediaResponse.json();
-    const text = await createMediaResponse.text();
-    const json2 = await addUserResponse.json();
-    const text2 = await addUserResponse.text();
-    console.log(`Json: ${json} \n Text: ${text}`);
-    console.log(`Json2: ${json2} \n Text: ${text2}`);
+    alert(addUserResponse.status);
   };
 
   return (
