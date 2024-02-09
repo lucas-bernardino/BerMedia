@@ -18,10 +18,6 @@ interface IProps {
 }
 
 function ShowCard({ media }: IProps) {
-  //TODO: If user clicks on like, comment, or save button, check whether or not there's a token associated with this user.
-  //if there isn't, navigate to the log in page.
-  //if there is and it was a save, grab the username from the token, call the route responsible for appending a media to the user's media data.
-
   const navigate = useNavigate();
 
   const HandleSave = async () => {
@@ -31,6 +27,38 @@ function ShowCard({ media }: IProps) {
       return;
     }
     const token = getTokenLocalStorage();
+
+    const getMediaByToken = await fetch("http://localhost:8080/media", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
+      },
+    });
+
+    let noMoreOperations: boolean = false;
+
+    const mediasArray: IMedia[] = await getMediaByToken.json();
+    await Promise.all(
+      // need to use Promise.All because it needs to wait for all the promises of the array.
+      mediasArray.map(async (item: IMedia) => {
+        if (item.imdbId === media.imdbId) {
+          await fetch(`http://localhost:8080/media/${media.imdbId}`, {
+            method: "DELETE",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token as string}`,
+            },
+          });
+          noMoreOperations = true;
+        }
+      }),
+    );
+
+    if (noMoreOperations) {
+      window.location.reload();
+      return;
+    }
 
     const getMediaResponse = await fetch(
       `http://localhost:8080/media/${media.imdbId}`,
@@ -67,7 +95,7 @@ function ShowCard({ media }: IProps) {
         }),
       });
     }
-    const addUserResponse = await fetch("http://localhost:8080/media/newuser", {
+    await fetch("http://localhost:8080/media/newuser", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +106,6 @@ function ShowCard({ media }: IProps) {
         userId: user.id,
       }),
     });
-    alert(addUserResponse.status);
   };
 
   return (
