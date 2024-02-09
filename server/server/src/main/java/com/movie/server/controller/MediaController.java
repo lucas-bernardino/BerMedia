@@ -3,9 +3,11 @@ package com.movie.server.controller;
 
 import com.fasterxml.jackson.annotation.JsonView;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.movie.server.model.User;
 import com.movie.server.model.dto.IdUserMediaDto;
 import com.movie.server.model.Media;
 import com.movie.server.model.View;
+import com.movie.server.service.AuthenticationService;
 import com.movie.server.service.MediaService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,11 @@ import java.util.List;
 public class MediaController {
 
     private final MediaService mediaService;
+    private final AuthenticationService authenticationService;
 
-    public MediaController(MediaService mediaService) {
+    public MediaController(MediaService mediaService, AuthenticationService authenticationService) {
         this.mediaService = mediaService;
+        this.authenticationService = authenticationService;
     }
 
     @PostMapping("")
@@ -37,10 +41,15 @@ public class MediaController {
         return ResponseEntity.ok().build();
     }
 
-    @GetMapping("") // /media?username=...
+    @GetMapping("")
     @JsonView(View.Default.class)
-    public ResponseEntity<List<Media>> getAllMediasByUsername(@RequestParam String username) throws JsonProcessingException {
-        List<Media> medias = mediaService.getAllMediasByUsername(username);
+    public ResponseEntity<List<Media>> getAllMediasByUsername(@RequestHeader("Authorization") String token) throws JsonProcessingException {
+        User user = authenticationService.getUser(token);
+        if (user == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        System.out.println("USER FROM LINE 47: " + user.getUsername());
+        List<Media> medias = mediaService.getAllMediasByUsername(user.getUsername());
         return ResponseEntity.ok().body(medias);
     }
 
@@ -61,4 +70,9 @@ public class MediaController {
         return ResponseEntity.ok().body(media);
     }
 
+    @DeleteMapping("/{imdbId}")
+    public ResponseEntity<Void> deleteMediaByImdbId(@PathVariable String imdbId, @RequestHeader("Authorization") String token) {
+        mediaService.deleteMediaByImdbId(imdbId, token);
+        return ResponseEntity.ok().build();
+    }
 }

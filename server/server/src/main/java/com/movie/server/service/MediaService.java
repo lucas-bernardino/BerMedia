@@ -6,6 +6,7 @@ import com.movie.server.repository.MediaRepository;
 import com.movie.server.repository.UserRepository;
 import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,12 +17,14 @@ public class MediaService {
 
     private final UserRepository userRepository;
     private final UserService userService;
-
     private final MediaRepository mediaRepository;
-    public MediaService(UserRepository userRepository, UserService userService, MediaRepository mediaRepository) {
+
+    private final AuthenticationService authenticationService;
+    public MediaService(UserRepository userRepository, UserService userService, MediaRepository mediaRepository, AuthenticationService authenticationService) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.mediaRepository = mediaRepository;
+        this.authenticationService = authenticationService;
     }
 
     public List<Media> getAllMediasByUsername(String username) {
@@ -64,5 +67,14 @@ public class MediaService {
 
     public Media getMediaByImdbId(String id) {
         return mediaRepository.findByImdbId(id);
+    }
+
+    @Transactional
+    public void deleteMediaByImdbId(String imdbId, String token) {
+        Media media = mediaRepository.findByImdbId(imdbId);
+        User user = authenticationService.getUser(token);
+        List<Media> userMedias = user.getMedias();
+        userMedias.remove(media);
+        user.setMedias(userMedias);
     }
 }
