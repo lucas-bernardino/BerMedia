@@ -1,32 +1,13 @@
 import { useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
-import SearchCard from "../card/SearchCard";
+import Card from "../card/Card";
 
-interface ILength {
-  hour: number;
-  min: number;
-}
-
-interface ISearchCard {
-  certificate: string;
-  genre: string[];
-  id: string;
-  length: ILength;
-  plot: string;
-  rank: number;
-  rating: number;
-  title: string;
-  title_type: string;
-  url: string;
-  year_end: number;
-  year_start: number;
-}
+import { IMedia } from "../../utils/interfaces";
 
 function Search() {
   const { state } = useLocation();
-  console.log(state);
 
-  const [titleData, setTitleData] = useState<ISearchCard[] | null>(null);
+  const [titleData, setTitleData] = useState<IMedia[] | null>(null);
 
   const getDataFromTitle = async () => {
     const title: string = state.title;
@@ -37,7 +18,6 @@ function Search() {
     );
     const data = await response.json();
     setTitleData(data);
-    console.log(data);
   };
 
   useEffect(() => {
@@ -48,7 +28,7 @@ function Search() {
   return (
     <>
       {titleData
-        ? titleData.map((item) => <SearchCard titleInfo={item} key={item.id} />)
+        ? titleData.map((item) => <Card media={item} key={item.imdbId} />)
         : ""}
     </>
   );

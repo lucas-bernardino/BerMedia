@@ -1,3 +1,5 @@
+import { IUser } from "./interfaces";
+
 export function setTokenLocalStorage(token: string) {
   localStorage.setItem("token", token);
 }
@@ -29,33 +31,4 @@ export async function getAuthenticatedUser(): Promise<IUser | null> {
   } catch (error) {
     throw new Error("Something went wrong in getting the authenticated user");
   }
-}
-
-interface IUser {
-  id: number;
-  username: string;
-  password: string;
-  medias: IMedia[];
-  role: string;
-}
-
-interface IMedia {
-  id: number;
-  title: string;
-  imdbId: string;
-  plot: string;
-  pictureUrl: string;
-  certificate: string;
-  genre: string[];
-  length: ILength;
-  rank: string;
-  ranking: string;
-  titleType: string;
-  yearStart: number;
-  yearEnd: number;
-}
-
-interface ILength {
-  hour: number;
-  min: number;
 }

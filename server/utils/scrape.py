@@ -19,53 +19,48 @@ def getData(url, type):
     for data in all_data:
  
         dict_data = {}
-        
+
         try:
             rank = data["currentRank"]
             titulo = data["node"]["originalTitleText"]["text"]
             url = data["node"]["primaryImage"]["url"]
-            genero = data["node"]["titleGenres"]["genres"][0]["genre"]["text"]
+            genero = [x["genre"]["text"] for x in list(data["node"]["titleGenres"]["genres"])] 
             nota = data["node"]["ratingsSummary"]["aggregateRating"]
             plot = data["node"]["plot"]["plotText"]["plainText"]
             imdb_id = data["node"]["id"]
+            certificate = data["node"]["certificate"]["rating"]
+            length = data["node"]["runtime"]["seconds"]
+            titleType = data["node"]["titleType"]["id"]
+            year_start = data["node"]["releaseYear"]["year"] 
+            year_end = 0
 
-            
-            if type == "movie":
-                ano = data["node"]["releaseYear"]["year"]
-                horas = data["node"]["runtime"]["seconds"] // 3600
-                minut = int(((data["node"]["runtime"]["seconds"] / 3600) % horas) * 60)
-                
-                dict_data = {
-                    "id": imdb_id,
-                    "url": url,
-                    "title": titulo,
-                    "rank": rank,
-                    "plot": plot,
-                    "genre": genero,
-                    "rating": nota,
-                    "year": ano,
-                    "length": {"hour": horas, "min": minut}
-                }
-            
-            if type == "show":
-                ano_inicio = data["node"]["releaseYear"]["year"]
-                ano_fim = data["node"]["releaseYear"]["endYear"] if data["node"]["releaseYear"]["endYear"] is not None else -1
-                
-                dict_data = {
-                    "id": imdb_id,
-                    "url": url,
-                    "title": titulo,
-                    "rank": rank,
-                    "plot": plot,
-                    "genre": genero,
-                    "rating": nota,
-                    "year_start": ano_inicio,
-                    "year_end": ano_fim,
-                }    
-                
+            if type == "show": 
+                year_end = data["node"]["releaseYear"]["endYear"] if data["node"]["releaseYear"]["endYear"] is not None else -1
+
+
+            dict_data = {
+                "title": titulo,
+                "imdbId": imdb_id,
+                "plot": plot,
+                "pictureUrl": url,
+                "certificate": certificate,
+                "genre": genero,
+                "length": length,
+                "score": nota,
+                "rank": rank,
+                "titleType": titleType,
+                "yearStart": year_start,
+                "yearEnd": year_end,
+                "users": []
+            }
+              
             list_data.append(dict_data)
         
         except Exception as e:
             pass
 
     return list_data
+
+if __name__ == "__main__":
+    getData("https://www.imdb.com/chart/top/", "movie")
+    # __import__('pprint').pprint(getData("https://www.imdb.com/chart/toptv/", "show"))

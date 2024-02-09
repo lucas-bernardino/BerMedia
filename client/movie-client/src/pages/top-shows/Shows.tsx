@@ -1,34 +1,21 @@
 import { useEffect, useState } from "react";
-import ShowCard from "../../components/card/ShowCard";
-
-
-interface IShow {
-  id: string,
-  url: string,
-  title: string,
-  rank: number,
-  plot: string,
-  genre: string,
-  rating: number,
-  year_start: number,
-  year_end: number,
-}
+import Card from "../../components/card/Card";
+import { IMedia } from "../../utils/interfaces";
 
 interface IProps {
-  type: string  
+  type: string;
 }
 
 function Shows({ type }: IProps) {
-  const [shows, setShows] = useState<IShow[] | null>();
+  const [shows, setShows] = useState<IMedia[] | null>();
 
   const getShows = async (opt: string) => {
     try {
       const response = await fetch(`http://127.0.0.1:5000/${opt}shows`);
       const data = await response.json();
       setShows(data);
-      console.log(data);
     } catch (error) {
-        setShows(null);
+      setShows(null);
     }
   };
 
@@ -38,10 +25,9 @@ function Shows({ type }: IProps) {
 
   return (
     <>
-      {shows ? (
-        shows.map((show) => (
-          <ShowCard show={show} key={show.id}/>
-          ))) : "" }
+      {shows
+        ? shows.map((show) => <Card media={show} key={show.imdbId} />)
+        : ""}
     </>
   );
 }

@@ -5,6 +5,7 @@ import ShowPage from "./pages/home-page/ShowPage";
 import SignIn from "./components/login/SignIn";
 import SignUp from "./components/login/SignUp";
 import SearchPage from "./pages/home-page/SearchPage";
+import Profile from "./pages/home-page/Profile";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
         <Route path="/topmovies" element={<MoviePage type="top" />} />
         <Route path="/popmovies" element={<MoviePage type="pop" />} />
         <Route path="/search" element={<SearchPage />} />
+        <Route path="/profile" element={<Profile />} />
       </Routes>
     </>
   );

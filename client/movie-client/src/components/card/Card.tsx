@@ -1,54 +1,104 @@
-import { FaCommentAlt, FaStar } from "react-icons/fa";
+import { AiFillLike } from "react-icons/ai";
+import { FaClock, FaCommentAlt, FaStar } from "react-icons/fa";
 import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
-import { BiSolidCameraMovie } from "react-icons/bi";
-import { FaClock } from "react-icons/fa";
-import { AiFillLike } from "react-icons/ai";
 import { RiSaveFill } from "react-icons/ri";
 
-interface ILength {
-  hour: number;
-  min: number;
-}
+import { IMedia } from "../../utils/interfaces";
+import { BiSolidCameraMovie } from "react-icons/bi";
 
-interface ISearchCard {
-  certificate: string;
-  genre: string[];
-  id: string;
-  length: ILength;
-  plot: string;
-  rank: number;
-  rating: number;
-  title: string;
-  title_type: string;
-  url: string;
-  year_end: number;
-  year_start: number;
-}
+import {
+  getAuthenticatedUser,
+  getTokenLocalStorage,
+} from "../../utils/helpers";
+import { useNavigate } from "react-router-dom";
 
 interface IProps {
-  titleInfo: ISearchCard;
+  media: IMedia;
 }
 
-function SearchCard({ titleInfo: titleInfo }: IProps) {
+function ShowCard({ media }: IProps) {
+  //TODO: If user clicks on like, comment, or save button, check whether or not there's a token associated with this user.
+  //if there isn't, navigate to the log in page.
+  //if there is and it was a save, grab the username from the token, call the route responsible for appending a media to the user's media data.
+
+  const navigate = useNavigate();
+
+  const HandleSave = async () => {
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
+    const token = getTokenLocalStorage();
+
+    const getMediaResponse = await fetch(
+      `http://localhost:8080/media/${media.imdbId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token as string}`,
+        },
+      },
+    );
+
+    if (getMediaResponse.status === 404) {
+      await fetch("http://localhost:8080/media", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token as string}`,
+        },
+        body: JSON.stringify({
+          title: media.title,
+          imdbId: media.imdbId,
+          plot: media.plot,
+          pictureUrl: media.pictureUrl,
+          certificate: media.certificate,
+          genre: media.genre,
+          length: media.length,
+          score: media.score,
+          rank: media.rank,
+          titleType: media.titleType,
+          yearStart: media.yearStart,
+          yearEnd: media.yearEnd,
+          users: media.users,
+        }),
+      });
+    }
+    const addUserResponse = await fetch("http://localhost:8080/media/newuser", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
+      },
+      body: JSON.stringify({
+        imdbId: media.imdbId,
+        userId: user.id,
+      }),
+    });
+    alert(addUserResponse.status);
+  };
+
   return (
     <div className="group p-3 ml-10 w-[400px] h-[400px] flex content-center justify-center mt-10 hover:bg-slate-950 hover:rounded-[40px] hover:h-[700px] ease-in-out duration-300">
       <div className="m-3 p-4 bg-white rounded-xl flex-col justify-start items-center gap-4 inline-flex">
         <img
           className="w-[190px] h-[270px] relative bg-neutral-200 rounded-xl object-cover"
-          src={titleInfo.url}
+          src={media.pictureUrl}
         ></img>
         <div className="flex-col justify-start items-start gap-4 flex">
           <div className="justify-start items-start gap-6 inline-flex">
             <div className="w-32 text-black text-lg font-medium font-['Source Code Pro']">
-              {titleInfo.title}
+              {media.title}
             </div>
             <div className="w-32 text-right text-black text-base font-semibold font-['Source Code Pro'] ">
-              {titleInfo.certificate}
+              {media.certificate}
             </div>
           </div>
           <div className="w-[280px] text-stone-500 text-sm font-normal font-['Source Code Pro'] opacity-0 group-hover:opacity-100">
-            {titleInfo.plot}
+            {media.plot}
           </div>
           <div className="justify-between items-center gap-4  opacity-0 group-hover:opacity-100">
             <div className="justify-start items-center gap-1.5 flex">
@@ -56,7 +106,7 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
                 <FaStar />
               </div>
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
-                {titleInfo.rating}
+                {media.score}
               </div>
             </div>
             <div className="justify-start items-center gap-1.5 flex">
@@ -64,7 +114,9 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
                 <IoInformationCircle />{" "}
               </div>
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
-                {titleInfo.genre}
+                {media.genre.map((x, i) =>
+                  i === media.genre.length - 1 ? x : x + ", ",
+                )}
               </div>
             </div>
             <div className="justify-start items-center gap-1.5 flex">
@@ -72,8 +124,8 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
                 <PiCalendarFill />{" "}
               </div>
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
-                {titleInfo.year_start} {titleInfo.year_end == 0 ? "" : "-"}{" "}
-                {titleInfo.year_end <= 0 ? "" : titleInfo.year_end}
+                {media.yearStart} {media.yearEnd == 0 ? "" : "-"}{" "}
+                {media.yearEnd <= 0 ? "" : media.yearEnd}
               </div>
             </div>
             <div className="justify-start items-center gap-1.5 flex">
@@ -81,8 +133,8 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
                 <BiSolidCameraMovie />{" "}
               </div>
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
-                {titleInfo.title_type.charAt(0).toUpperCase() +
-                  titleInfo.title_type.slice(1)}
+                {media.titleType.charAt(0).toUpperCase() +
+                  media.titleType.slice(1)}
               </div>
             </div>
             <div className="justify-start items-center gap-1.5 flex">
@@ -90,7 +142,7 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
                 <FaClock />{" "}
               </div>
               <div className="text-stone-500 text-sm font-normal font-['Source Code Pro']">
-                {titleInfo.length.hour}h : {titleInfo.length.min}min
+                {media.length / 60} min
               </div>
             </div>
           </div>
@@ -102,7 +154,10 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
               <FaCommentAlt className="size-4 hover:scale-125 ease-in duration-75" />
             </div>
             <div>
-              <RiSaveFill className="size-6 hover:scale-125 ease-in duration-75" />
+              <RiSaveFill
+                className="size-6 hover:scale-125 ease-in duration-75"
+                onClick={HandleSave}
+              />
             </div>
           </div>
         </div>
@@ -111,4 +166,4 @@ function SearchCard({ titleInfo: titleInfo }: IProps) {
   );
 }
 
-export default SearchCard;
+export default ShowCard;
