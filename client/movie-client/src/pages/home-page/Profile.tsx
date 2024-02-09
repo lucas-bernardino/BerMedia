@@ -1,8 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  getAuthenticatedUser,
-  getTokenLocalStorage,
-} from "../../utils/helpers";
+import { getAuthenticatedUser } from "../../utils/helpers";
 import { useNavigate } from "react-router-dom";
 import { IUser } from "../../utils/interfaces";
 import Card from "../../components/card/Card";
@@ -12,7 +9,6 @@ function Profile() {
   const navigate = useNavigate();
 
   const [user, setUser] = useState<IUser | null>();
-  const [token, setToken] = useState<string | null>();
 
   const isAuthenticated = async () => {
     const userDetails = await getAuthenticatedUser();
@@ -21,7 +17,6 @@ function Profile() {
       return;
     }
     setUser(userDetails);
-    setToken(getTokenLocalStorage());
   };
 
   useEffect(() => {
