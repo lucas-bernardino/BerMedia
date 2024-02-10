@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 
 @RestController
@@ -73,6 +74,12 @@ public class MediaController {
     @DeleteMapping("/{imdbId}")
     public ResponseEntity<Void> deleteMediaByImdbId(@PathVariable String imdbId, @RequestHeader("Authorization") String token) {
         mediaService.deleteMediaByImdbId(imdbId, token);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/comment/{imdbId}")
+    public ResponseEntity<Void> addCommentToMedia(@PathVariable String imdbId, @RequestHeader("Authorization") String token, @RequestBody HashMap<String, String> comment) {
+        mediaService.addCommentToMedia(imdbId, token, comment.get("userComment"));
         return ResponseEntity.ok().build();
     }
 }
