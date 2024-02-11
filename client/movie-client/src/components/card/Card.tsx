@@ -4,7 +4,7 @@ import { PiCalendarFill } from "react-icons/pi";
 import { RiSaveFill } from "react-icons/ri";
 import { IoCloseCircle } from "react-icons/io5";
 
-import { IMedia } from "../../utils/interfaces";
+import { IComment, IMedia } from "../../utils/interfaces";
 import { BiSolidCameraMovie } from "react-icons/bi";
 
 import {
@@ -12,7 +12,7 @@ import {
   getTokenLocalStorage,
 } from "../../utils/helpers";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface IProps {
   media: IMedia;
@@ -22,6 +22,31 @@ function ShowCard({ media }: IProps) {
   const navigate = useNavigate();
 
   const [showComments, setShowComments] = useState<boolean>(false);
+  const [hasFetchedComments, setHasFetchedComments] = useState<boolean>(false);
+
+  const [mediaComments, setMediaComments] = useState<IComment[] | null>();
+
+  const getCommentsFromMedia = async () => {
+    const response = await fetch(
+      `http://localhost:8080/media/comment/${media.imdbId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const comments = await response.json();
+    setMediaComments(comments);
+  };
+
+  useEffect(() => {
+    if (showComments && !hasFetchedComments) {
+      getCommentsFromMedia();
+      setHasFetchedComments(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showComments, hasFetchedComments]);
 
   const HandleSave = async () => {
     const user = await getAuthenticatedUser();
@@ -56,7 +81,8 @@ function ShowCard({ media }: IProps) {
     });
   };
 
-  const HandleComment = async () => {
+  const HandleComment = async (e: any) => {
+    e.preventDefault();
     const user = await getAuthenticatedUser();
     if (!user) {
       navigate("/signin");
@@ -71,20 +97,30 @@ function ShowCard({ media }: IProps) {
 
     await handleMediaCreation({ media }, token as string);
 
-    const commentResponse = await fetch(
-      `http://localhost:8080/media/comment/${media.imdbId}`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token as string}`,
-        },
-        body: JSON.stringify({
-          userComment: "What a great show!",
-        }),
+    const userComment = e.target.comment.value as string;
+    if (userComment.length < 2) {
+      alert("Your comment must have more than three characters");
+      return;
+    }
+
+    await fetch(`http://localhost:8080/media/comment/${media.imdbId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
       },
-    );
-    console.log("commentResponse status:", commentResponse.status);
+      body: JSON.stringify({
+        userComment: userComment,
+      }),
+    });
+    mediaComments
+      ? setMediaComments((prev) => [
+          ...prev,
+          { id: 1, username: user.username, userComment: userComment },
+        ])
+      : setMediaComments([
+          { id: 1, username: user.username, userComment: userComment },
+        ]);
   };
 
   return (
@@ -156,7 +192,7 @@ function ShowCard({ media }: IProps) {
             <div className="">
               <FaCommentAlt
                 className="size-4 hover:scale-125 ease-in duration-75"
-                onClick={HandleComment}
+                onClick={() => setShowComments(!showComments)}
               />
               {showComments ? (
                 <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
@@ -165,18 +201,22 @@ function ShowCard({ media }: IProps) {
                       className="absolute right-3 top-3 size-5 hover:scale-125 ease-in duration-75"
                       onClick={() => setShowComments(!showComments)}
                     />
-                    {media?.comments?.map((item) => (
-                      <div className="flex flex-col mb-2">
+                    {mediaComments?.map((item) => (
+                      <div className="flex flex-col mb-2" key={item.username}>
                         <div>{item.username}</div>
                         <div>{item.userComment}</div>
                       </div>
                     ))}
-                    <form className="flex gap-3 justify-start items-center">
+                    <form
+                      className="flex gap-3 justify-start items-center"
+                      onSubmit={HandleComment}
+                    >
                       <label>New Comment</label>
                       <input
                         className="p-1 "
                         type="text"
                         placeholder="Add a new comment"
+                        name="comment"
                       />
                     </form>
                   </div>
@@ -249,11 +289,7 @@ const handleMediaCreation = async (
     },
   );
 
-  console.log(`getMediaResponse status: ${getMediaResponse.status}`);
-  console.log(`Token recevied in handleMediaCreation: ${token}`);
-
   if (getMediaResponse.status === 404) {
-    console.log(`Entered status code === 404. Media imdbID: ${media.imdbId}`);
     await fetch("http://localhost:8080/media", {
       method: "POST",
       headers: {
