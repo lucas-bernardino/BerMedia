@@ -89,4 +89,12 @@ public class MediaService {
         media.setComments(comments);
         mediaRepository.save(media);
     }
+
+    public List<Comment> getAllCommentsFromMedia(String imdbId) {
+        var medias = mediaRepository.findByImdbId(imdbId);
+        if (medias != null) {
+            return medias.getComments();
+        }
+        return null;
+    }
 }
