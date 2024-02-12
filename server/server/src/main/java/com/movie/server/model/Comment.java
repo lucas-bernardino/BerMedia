@@ -30,7 +30,7 @@ public class Comment {
     private String userComment;
 
     @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
-    @JoinColumn(name = "media_id")
+    @JoinColumn(name = "media_imdb_id", referencedColumnName = "imdbId")
     private Media media;
 
 }
