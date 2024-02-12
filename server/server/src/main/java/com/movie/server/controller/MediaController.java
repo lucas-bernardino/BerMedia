@@ -73,25 +73,9 @@ public class MediaController {
         return ResponseEntity.ok().body(media);
     }
 
-    @PostMapping("/comment/{imdbId}")
-    public ResponseEntity<Void> addCommentToMedia(@PathVariable String imdbId, @RequestHeader("Authorization") String token, @RequestBody HashMap<String, String> comment) {
-        mediaService.addCommentToMedia(imdbId, token, comment.get("userComment"));
-        return ResponseEntity.ok().build();
-    }
-
     @DeleteMapping("/{imdbId}")
     public ResponseEntity<Void> deleteMediaByImdbId(@PathVariable String imdbId, @RequestHeader("Authorization") String token) {
         mediaService.deleteMediaByImdbId(imdbId, token);
         return ResponseEntity.ok().build();
-    }
-
-    @GetMapping("/comment/{imdbId}")
-    @JsonView(View.Default.class)
-    public ResponseEntity<List<Comment>> getAllComentsFromMedia(@PathVariable String imdbId) {
-        List<Comment> comments = mediaService.getAllCommentsFromMedia(imdbId);
-        if (comments == null) {
-            return ResponseEntity.ok().body(new ArrayList<>());
-        }
-        return ResponseEntity.ok().body(comments);
     }
 }
