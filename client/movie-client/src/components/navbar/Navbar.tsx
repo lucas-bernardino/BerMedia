@@ -1,11 +1,30 @@
 import { Link, useNavigate } from "react-router-dom";
 import { IoMdArrowDropright } from "react-icons/io";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { IUser } from "../../utils/interfaces";
+import {
+  getAuthenticatedUser,
+  setTokenLocalStorage,
+} from "../../utils/helpers";
 
 function Navbar() {
   const [moviesMenu, setMoviesMenu] = useState(false);
 
   const [showsMenu, setShowsMenu] = useState(false);
+
+  const [user, setUser] = useState<IUser | null>();
+
+  const isAuthenticated = async () => {
+    const userDetails = await getAuthenticatedUser();
+    setUser(userDetails);
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      isAuthenticated();
+    }, 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const navigate = useNavigate();
 
@@ -15,6 +34,12 @@ function Navbar() {
 
     e.preventDefault();
     navigate("/search", { state: { title } });
+  };
+
+  const handleSignOut = () => {
+    setTokenLocalStorage("");
+    setUser(null);
+    navigate("/signin");
   };
 
   return (
@@ -78,13 +103,11 @@ function Navbar() {
       <div className="flex-col flex text-2xl text-neutral-200 font-abel justify-center p-4 cursor-pointer hover:scale-110 transform transition-transform">
         <div className="flex justify-center content-center ">
           <Link to="/feed">FEED</Link>
-          {/* <IoMdArrowDropdown className="self-center"/> */}
         </div>
       </div>
       <div className="flex-col flex text-2xl text-neutral-200 font-abel justify-center p-4 cursor-pointer hover:scale-110 transform transition-transform">
         <div className="flex justify-center content-center ">
-          <Link to="/profile">PROFILE</Link>
-          {/* <IoMdArrowDropdown className="self-center"/> */}
+          <Link to="/profile">MY MEDIAS</Link>
         </div>
       </div>
       <form
@@ -97,6 +120,18 @@ function Navbar() {
           name="title"
         ></input>
       </form>
+      {user ? (
+        <div className="flex-col flex text-base text-neutral-200 font-abel justify-center p-4 cursor-pointer hover:scale-110 transform transition-transform">
+          <div
+            className="flex justify-center content-center"
+            onClick={handleSignOut}
+          >
+            SIGN OUT
+          </div>
+        </div>
+      ) : (
+        ""
+      )}
     </div>
   );
 }

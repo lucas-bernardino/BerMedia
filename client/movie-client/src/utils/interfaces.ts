@@ -1,4 +1,5 @@
 export interface IMedia {
+  id: number;
   title: string;
   imdbId: string;
   plot: string;
@@ -12,6 +13,7 @@ export interface IMedia {
   yearStart: number;
   yearEnd: number;
   users: IUser[];
+  comments: IComment[];
 }
 
 export interface IUser {
@@ -20,4 +22,10 @@ export interface IUser {
   password: string;
   medias: IMedia[];
   role: string;
+}
+
+export interface IComment {
+  id: number;
+  username: string;
+  userComment: string;
 }

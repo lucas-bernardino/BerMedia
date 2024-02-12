@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.*;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,5 +79,9 @@ public class Media {
     @JoinTable(name = "user_media", joinColumns = @JoinColumn(name = "media_id"), inverseJoinColumns = @JoinColumn(name = "users_id"))
     @JsonView({View.Test.class})
     private List<User> users;
+
+    @OneToMany(cascade = CascadeType.MERGE, fetch = FetchType.EAGER, mappedBy = "media")
+    @JsonView({View.Default.class, View.Test.class})
+    private List<Comment> comments = new ArrayList<>();
 
 }

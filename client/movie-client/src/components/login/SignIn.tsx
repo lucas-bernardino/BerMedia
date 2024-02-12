@@ -75,6 +75,7 @@ function SignIn() {
           <form
             className="flex w-1/2 h-20 mt-14 flex-col"
             onChange={(e: any) => setPassword(e.target.value)}
+            onSubmit={signIn}
           >
             <label className="block mb-2 text-sm font-medium text-gray-900 dark:text-white">
               Password

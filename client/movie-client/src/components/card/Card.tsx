@@ -1,10 +1,10 @@
-import { AiFillLike } from "react-icons/ai";
 import { FaClock, FaCommentAlt, FaStar } from "react-icons/fa";
 import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
 import { RiSaveFill } from "react-icons/ri";
+import { IoCloseCircle } from "react-icons/io5";
 
-import { IMedia } from "../../utils/interfaces";
+import { IComment, IMedia } from "../../utils/interfaces";
 import { BiSolidCameraMovie } from "react-icons/bi";
 
 import {
@@ -12,17 +12,41 @@ import {
   getTokenLocalStorage,
 } from "../../utils/helpers";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 
 interface IProps {
   media: IMedia;
 }
 
 function ShowCard({ media }: IProps) {
-  //TODO: If user clicks on like, comment, or save button, check whether or not there's a token associated with this user.
-  //if there isn't, navigate to the log in page.
-  //if there is and it was a save, grab the username from the token, call the route responsible for appending a media to the user's media data.
-
   const navigate = useNavigate();
+
+  const [showComments, setShowComments] = useState<boolean>(false);
+  const [hasFetchedComments, setHasFetchedComments] = useState<boolean>(false);
+
+  const [mediaComments, setMediaComments] = useState<IComment[] | null>();
+
+  const getCommentsFromMedia = async () => {
+    const response = await fetch(
+      `http://localhost:8080/media/comment/${media.imdbId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+    const comments = await response.json();
+    setMediaComments(comments);
+  };
+
+  useEffect(() => {
+    if (showComments && !hasFetchedComments) {
+      getCommentsFromMedia();
+      setHasFetchedComments(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showComments, hasFetchedComments]);
 
   const HandleSave = async () => {
     const user = await getAuthenticatedUser();
@@ -31,43 +55,20 @@ function ShowCard({ media }: IProps) {
       return;
     }
     const token = getTokenLocalStorage();
-
-    const getMediaResponse = await fetch(
-      `http://localhost:8080/media/${media.imdbId}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token as string}`,
-        },
-      },
-    );
-
-    if (getMediaResponse.status === 404) {
-      await fetch("http://localhost:8080/media", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token as string}`,
-        },
-        body: JSON.stringify({
-          title: media.title,
-          imdbId: media.imdbId,
-          plot: media.plot,
-          pictureUrl: media.pictureUrl,
-          certificate: media.certificate,
-          genre: media.genre,
-          length: media.length,
-          score: media.score,
-          rank: media.rank,
-          titleType: media.titleType,
-          yearStart: media.yearStart,
-          yearEnd: media.yearEnd,
-          users: media.users,
-        }),
-      });
+    if (!token) {
+      navigate("/signin");
     }
-    const addUserResponse = await fetch("http://localhost:8080/media/newuser", {
+
+    const flagContinue = await unsaveMedia({ media }, token as string);
+
+    if (flagContinue) {
+      window.location.reload();
+      return;
+    }
+
+    await handleMediaCreation({ media }, token as string);
+
+    await fetch("http://localhost:8080/media/newuser", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -78,7 +79,48 @@ function ShowCard({ media }: IProps) {
         userId: user.id,
       }),
     });
-    alert(addUserResponse.status);
+  };
+
+  const HandleComment = async (e: any) => {
+    e.preventDefault();
+    const user = await getAuthenticatedUser();
+    if (!user) {
+      navigate("/signin");
+      return;
+    }
+    const token = getTokenLocalStorage();
+    if (!token) {
+      navigate("/signin");
+    }
+
+    setShowComments(!showComments);
+
+    await handleMediaCreation({ media }, token as string);
+
+    const userComment = e.target.comment.value as string;
+    if (userComment.length < 2) {
+      alert("Your comment must have more than three characters");
+      return;
+    }
+
+    await fetch(`http://localhost:8080/media/comment/${media.imdbId}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
+      },
+      body: JSON.stringify({
+        userComment: userComment,
+      }),
+    });
+    mediaComments
+      ? setMediaComments((prev) => [
+          ...prev,
+          { id: 1, username: user.username, userComment: userComment },
+        ])
+      : setMediaComments([
+          { id: 1, username: user.username, userComment: userComment },
+        ]);
   };
 
   return (
@@ -147,11 +189,41 @@ function ShowCard({ media }: IProps) {
             </div>
           </div>
           <div className="flex w-full items-center justify-around opacity-0 group-hover:opacity-100">
-            <div>
-              <AiFillLike className="size-5 hover:scale-125 ease-in duration-75" />
-            </div>
-            <div>
-              <FaCommentAlt className="size-4 hover:scale-125 ease-in duration-75" />
+            <div className="">
+              <FaCommentAlt
+                className="size-4 hover:scale-125 ease-in duration-75"
+                onClick={() => setShowComments(!showComments)}
+              />
+              {showComments ? (
+                <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
+                  <div className="absolute border border-white rounded-xl bg-gray-300 p-4 w-1/3">
+                    <IoCloseCircle
+                      className="absolute right-3 top-3 size-5 hover:scale-125 ease-in duration-75"
+                      onClick={() => setShowComments(!showComments)}
+                    />
+                    {mediaComments?.map((item) => (
+                      <div className="flex flex-col mb-2" key={item.username}>
+                        <div>{item.username}</div>
+                        <div>{item.userComment}</div>
+                      </div>
+                    ))}
+                    <form
+                      className="flex gap-3 justify-start items-center"
+                      onSubmit={HandleComment}
+                    >
+                      <label>New Comment</label>
+                      <input
+                        className="p-1 "
+                        type="text"
+                        placeholder="Add a new comment"
+                        name="comment"
+                      />
+                    </form>
+                  </div>
+                </div>
+              ) : (
+                ""
+              )}
             </div>
             <div>
               <RiSaveFill
@@ -165,5 +237,83 @@ function ShowCard({ media }: IProps) {
     </div>
   );
 }
+
+// This function is responsible for unsaving the media if the user clicks in the save button and the media is already saved.
+// Returns a boolean: false if it was necessary to unsave, or true if it was necessary.
+const unsaveMedia = async (
+  { media }: IProps,
+  token: string,
+): Promise<boolean> => {
+  const getMediaByToken = await fetch("http://localhost:8080/media", {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token as string}`,
+    },
+  });
+
+  let noMoreOperations: boolean = false;
+
+  const mediasArray: IMedia[] = await getMediaByToken.json();
+  await Promise.all(
+    // need to use Promise.All because it needs to wait for all the promises of the array.
+    mediasArray.map(async (item: IMedia) => {
+      if (item.imdbId === media.imdbId) {
+        await fetch(`http://localhost:8080/media/${media.imdbId}`, {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token as string}`,
+          },
+        });
+        noMoreOperations = true;
+      }
+    }),
+  );
+  return noMoreOperations;
+};
+
+// This function is responsible for checking if the media exists in the database. If it doesn't exist, it will create it.
+const handleMediaCreation = async (
+  { media }: IProps,
+  token: string,
+): Promise<void> => {
+  const getMediaResponse = await fetch(
+    `http://localhost:8080/media/${media.imdbId}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
+      },
+    },
+  );
+
+  if (getMediaResponse.status === 404) {
+    await fetch("http://localhost:8080/media", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token as string}`,
+      },
+      body: JSON.stringify({
+        title: media.title,
+        imdbId: media.imdbId,
+        plot: media.plot,
+        pictureUrl: media.pictureUrl,
+        certificate: media.certificate,
+        genre: media.genre,
+        length: media.length,
+        score: media.score,
+        rank: media.rank,
+        titleType: media.titleType,
+        yearStart: media.yearStart,
+        yearEnd: media.yearEnd,
+        users: media.users,
+        comments: media.comments,
+      }),
+    });
+  }
+};
 
 export default ShowCard;
