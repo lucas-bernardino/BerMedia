@@ -1,9 +1,8 @@
 import { FaClock, FaCommentAlt, FaStar } from "react-icons/fa";
 import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
-import { RiSaveFill } from "react-icons/ri";
 import { IoCloseCircle } from "react-icons/io5";
-
+import { IoBookmarkSharp } from "react-icons/io5";
 import { IComment, IMedia } from "../../utils/interfaces";
 import { BiSolidCameraMovie } from "react-icons/bi";
 
@@ -25,10 +24,11 @@ function ShowCard({ media }: IProps) {
   const [hasFetchedComments, setHasFetchedComments] = useState<boolean>(false);
 
   const [mediaComments, setMediaComments] = useState<IComment[] | null>();
+  const [mediaCommentsNumber, setMediaCommentsNumber] = useState<number>(0);
 
-  const getCommentsFromMedia = async () => {
-    const response = await fetch(
-      `http://localhost:8080/media/comment/${media.imdbId}`,
+  const getNumberOfComments = async () => {
+    const responseNumber = await fetch(
+      `http://localhost:8080/comment/total/${media.imdbId}`,
       {
         method: "GET",
         headers: {
@@ -36,13 +36,29 @@ function ShowCard({ media }: IProps) {
         },
       },
     );
-    const comments = await response.json();
+    const numberComments = await responseNumber.json();
+    setMediaCommentsNumber(numberComments);
+  };
+
+  const getCommentsDataFromMedia = async () => {
+    const responseComments = await fetch(
+      `http://localhost:8080/comment/${media.imdbId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      },
+    );
+
+    const comments = await responseComments.json();
+
     setMediaComments(comments);
   };
 
   useEffect(() => {
     if (showComments && !hasFetchedComments) {
-      getCommentsFromMedia();
+      getCommentsDataFromMedia();
       setHasFetchedComments(true);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -81,6 +97,7 @@ function ShowCard({ media }: IProps) {
     });
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const HandleComment = async (e: any) => {
     e.preventDefault();
     const user = await getAuthenticatedUser();
@@ -103,7 +120,7 @@ function ShowCard({ media }: IProps) {
       return;
     }
 
-    await fetch(`http://localhost:8080/media/comment/${media.imdbId}`, {
+    await fetch(`http://localhost:8080/comment/${media.imdbId}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -115,16 +132,19 @@ function ShowCard({ media }: IProps) {
     });
     mediaComments
       ? setMediaComments((prev) => [
-          ...prev,
-          { id: 1, username: user.username, userComment: userComment },
+          ...prev!,
+          { username: user.username, userComment: userComment },
         ])
       : setMediaComments([
-          { id: 1, username: user.username, userComment: userComment },
+          { username: user.username, userComment: userComment },
         ]);
   };
 
   return (
-    <div className="group p-3 ml-10 w-[400px] h-[400px] flex content-center justify-center mt-10 hover:bg-slate-950 hover:rounded-[40px] hover:h-[700px] ease-in-out duration-300">
+    <div
+      className="group p-3 ml-10 w-[400px] h-[400px] flex content-center justify-center mt-10 hover:bg-slate-950 hover:rounded-[40px] hover:h-[700px] ease-in-out duration-300"
+      onMouseEnter={getNumberOfComments}
+    >
       <div className="m-3 p-4 bg-white rounded-xl flex-col justify-start items-center gap-4 inline-flex">
         <img
           className="w-[190px] h-[270px] relative bg-neutral-200 rounded-xl object-cover"
@@ -189,11 +209,12 @@ function ShowCard({ media }: IProps) {
             </div>
           </div>
           <div className="flex w-full items-center justify-around opacity-0 group-hover:opacity-100">
-            <div className="">
+            <div className="flex items-center gap-2">
               <FaCommentAlt
                 className="size-4 hover:scale-125 ease-in duration-75"
                 onClick={() => setShowComments(!showComments)}
               />
+              <p>{mediaCommentsNumber ?? mediaCommentsNumber}</p>
               {showComments ? (
                 <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
                   <div className="absolute border border-white rounded-xl bg-gray-300 p-4 w-1/3">
@@ -201,8 +222,8 @@ function ShowCard({ media }: IProps) {
                       className="absolute right-3 top-3 size-5 hover:scale-125 ease-in duration-75"
                       onClick={() => setShowComments(!showComments)}
                     />
-                    {mediaComments?.map((item) => (
-                      <div className="flex flex-col mb-2" key={item.username}>
+                    {mediaComments?.map((item, i) => (
+                      <div className="flex flex-col mb-2" key={i}>
                         <div>{item.username}</div>
                         <div>{item.userComment}</div>
                       </div>
@@ -226,7 +247,7 @@ function ShowCard({ media }: IProps) {
               )}
             </div>
             <div>
-              <RiSaveFill
+              <IoBookmarkSharp
                 className="size-6 hover:scale-125 ease-in duration-75"
                 onClick={HandleSave}
               />

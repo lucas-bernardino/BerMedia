@@ -25,7 +25,6 @@ export interface IUser {
 }
 
 export interface IComment {
-  id: number;
   username: string;
   userComment: string;
 }
