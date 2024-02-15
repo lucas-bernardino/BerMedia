@@ -102,11 +102,6 @@ function Navbar() {
       </div>
       <div className="flex-col flex text-2xl text-neutral-200 font-abel justify-center p-4 cursor-pointer hover:scale-110 transform transition-transform">
         <div className="flex justify-center content-center ">
-          <Link to="/feed">FEED</Link>
-        </div>
-      </div>
-      <div className="flex-col flex text-2xl text-neutral-200 font-abel justify-center p-4 cursor-pointer hover:scale-110 transform transition-transform">
-        <div className="flex justify-center content-center ">
           <Link to="/profile">MY MEDIAS</Link>
         </div>
       </div>

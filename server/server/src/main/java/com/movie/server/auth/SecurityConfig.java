@@ -35,7 +35,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/register").permitAll()
                         .requestMatchers(HttpMethod.GET, "/auth/me").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/media/comment/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/comment/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/comment/total/*").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();

@@ -29,7 +29,7 @@ public class Media {
     @JsonView({View.Default.class, View.Test.class})
     private String title;
 
-    @Column(name = "imdbId")
+    @Column(name = "imdbId", unique = true)
     @JsonView({View.Default.class, View.Test.class})
     private String imdbId;
 

@@ -1,6 +1,5 @@
 package com.movie.server.service;
 
-import com.movie.server.model.Comment;
 import com.movie.server.model.Media;
 import com.movie.server.model.User;
 import com.movie.server.repository.MediaRepository;
@@ -79,22 +78,5 @@ public class MediaService {
         user.setMedias(userMedias);
     }
 
-    @Transactional
-    public void addCommentToMedia(String imdbId, String token, String comment) {
-        Media media = mediaRepository.findByImdbId(imdbId);
-        User user = authenticationService.getUser(token);
-        List<Comment> comments = media.getComments();
-        Comment newComment = new Comment(null, user.getUsername(), comment, media);
-        comments.add(newComment);
-        media.setComments(comments);
-        mediaRepository.save(media);
-    }
 
-    public List<Comment> getAllCommentsFromMedia(String imdbId) {
-        var medias = mediaRepository.findByImdbId(imdbId);
-        if (medias != null) {
-            return medias.getComments();
-        }
-        return null;
-    }
 }
