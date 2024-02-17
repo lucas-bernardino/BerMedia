@@ -5,6 +5,10 @@ import com.movie.server.model.Media;
 import com.movie.server.model.View;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
+
+import java.time.Instant;
+import java.time.ZonedDateTime;
 
 @Entity
 @Table(name = "comment")
@@ -32,5 +36,17 @@ public class Comment {
     @ManyToOne(cascade = CascadeType.PERSIST, fetch = FetchType.EAGER)
     @JoinColumn(name = "media_imdb_id", referencedColumnName = "imdbId")
     private Media media;
+
+    public Comment(Long id, String username, String userComment, Media media) {
+        this.id = id;
+        this.username = username;
+        this.userComment = userComment;
+        this.media = media;
+    }
+
+    @Column(name = "createdOn")
+    @CreationTimestamp
+    @JsonView({View.Default.class, View.Test.class})
+    private Instant createdOn;
 
 }
