@@ -52,7 +52,6 @@ function ShowCard({ media }: IProps) {
     );
 
     const comments = await responseComments.json();
-
     setMediaComments(comments);
   };
 
@@ -217,24 +216,38 @@ function ShowCard({ media }: IProps) {
               <p>{mediaCommentsNumber ?? mediaCommentsNumber}</p>
               {showComments ? (
                 <div className="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 z-50 flex justify-center items-center">
-                  <div className="absolute border border-white rounded-xl bg-gray-300 p-4 w-1/3">
+                  <div className="flex flex-col absolute border border-white rounded-xl bg-sky-950/90 p-4 w-1/3">
                     <IoCloseCircle
-                      className="absolute right-3 top-3 size-5 hover:scale-125 ease-in duration-75"
+                      className="absolute right-2 top-1 size-5 hover:scale-125 ease-in duration-75 text-white"
                       onClick={() => setShowComments(!showComments)}
                     />
                     {mediaComments?.map((item, i) => (
-                      <div className="flex flex-col mb-2" key={i}>
-                        <div>{item.username}</div>
-                        <div>{item.userComment}</div>
+                      <div
+                        className="flex flex-col mb-2 bg-sky-800/90 rounded-xl p-2"
+                        key={i}
+                      >
+                        <div className="flex gap-9">
+                          <div className="font-bold">{item.username}</div>
+                          <div className="font-light">
+                            {item.createdOn?.slice(8, 10)}/
+                            {item.createdOn?.slice(5, 7)} -{" "}
+                            {item.createdOn?.slice(11, 16)}
+                          </div>
+                        </div>
+                        <div className="text-sky-50 font-sans">
+                          {item.userComment}
+                        </div>
                       </div>
                     ))}
                     <form
-                      className="flex gap-3 justify-start items-center"
+                      className="flex gap-3 justify-start items-center mt-5"
                       onSubmit={HandleComment}
                     >
-                      <label>New Comment</label>
+                      <label className="font-semibold text-white">
+                        New Comment
+                      </label>
                       <input
-                        className="p-1 "
+                        className="p-1 bg-sky-700/90 rounded-md text-white"
                         type="text"
                         placeholder="Add a new comment"
                         name="comment"

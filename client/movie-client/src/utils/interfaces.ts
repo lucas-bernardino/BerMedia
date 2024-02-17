@@ -27,4 +27,5 @@ export interface IUser {
 export interface IComment {
   username: string;
   userComment: string;
+  createdOn?: string;
 }
