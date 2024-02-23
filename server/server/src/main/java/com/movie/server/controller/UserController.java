@@ -24,7 +24,7 @@ public class UserController {
         this.userService = userService;
     }
 
-    @PostMapping("") // conferir
+    @PostMapping("")
     public ResponseEntity<Void> createUser(@RequestBody @Valid User user) {
         User newUser = new User(user.getUsername(), user.getPassword(), user.getRole());
         userService.createUser(newUser);
