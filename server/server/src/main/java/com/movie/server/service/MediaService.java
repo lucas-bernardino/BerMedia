@@ -1,5 +1,6 @@
 package com.movie.server.service;
 
+import com.movie.server.exception.NotFoundException;
 import com.movie.server.model.Media;
 import com.movie.server.model.User;
 import com.movie.server.repository.MediaRepository;
@@ -51,13 +52,22 @@ public class MediaService {
     }
 
     public void addUserToMedia(String imdbId, Long userId) {
+
+        if (imdbId == null) {
+            throw new IllegalArgumentException("Missing imdbId field");
+        }
+
+        if (userId == null) {
+            throw new IllegalArgumentException("Missing userId field");
+        }
+
         Media media = mediaRepository.findByImdbId(imdbId);
         if (media == null) {
-            throw new ObjectNotFoundException(Optional.of("Media not found by id: "), imdbId);
+            throw new NotFoundException(String.format("Media with id (%s) not found.", imdbId));
         }
         Optional<User> newUser = userService.getUserById(userId);
         if (newUser.isEmpty()) {
-            throw new ObjectNotFoundException(Optional.of("User not found by id: "), String.valueOf(userId));
+            throw new NotFoundException(String.format("User with id (%s) not found.", imdbId));
         };
         List<User> mediaUsers = media.getUsers();
         mediaUsers.add(newUser.get());

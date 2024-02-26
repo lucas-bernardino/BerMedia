@@ -38,7 +38,7 @@ public class MediaController {
         return ResponseEntity.ok().build();
     }
 
-    @PostMapping("/newuser") // futuramente será passado um token e nao o id do usuario, mas por hora deixar assim
+    @PostMapping("/newuser")
     public ResponseEntity<Void> addNewUserToMedia(@RequestBody @Valid IdUserMediaDto UserMediaObject) {
         mediaService.addUserToMedia(UserMediaObject.imdbId(), UserMediaObject.userId());
         return ResponseEntity.ok().build();
@@ -46,12 +46,8 @@ public class MediaController {
 
     @GetMapping("")
     @JsonView(View.Default.class)
-    public ResponseEntity<List<Media>> getAllMediasByUsername(@RequestHeader("Authorization") String token) throws JsonProcessingException {
+    public ResponseEntity<List<Media>> getAllMediasByUsername(@RequestHeader("Authorization") String token) {
         User user = authenticationService.getUser(token);
-        if (user == null) {
-            return ResponseEntity.badRequest().build();
-        }
-        System.out.println("USER FROM LINE 47: " + user.getUsername());
         List<Media> medias = mediaService.getAllMediasByUsername(user.getUsername());
         return ResponseEntity.ok().body(medias);
     }
