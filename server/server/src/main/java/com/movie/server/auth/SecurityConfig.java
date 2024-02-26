@@ -1,5 +1,6 @@
 package com.movie.server.auth;
 
+import com.movie.server.exception.UnauthorizedExceptionHandler;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,8 +13,12 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import java.io.IOException;
+import java.util.HashMap;
 
 @Configuration
 @EnableWebSecurity
@@ -39,8 +44,15 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/comment/total/*").permitAll()
                         .anyRequest().authenticated())
                 .addFilterBefore(securityFilter, UsernamePasswordAuthenticationFilter.class)
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(accessDeniedHandler()))
                 .build();
     }
+
+    @Bean
+    public AuthenticationEntryPoint accessDeniedHandler() {
+        return new UnauthorizedExceptionHandler();
+    }
+
 
     @Bean
     public AuthenticationManager authenticationManager (AuthenticationConfiguration authenticationConfiguration) throws Exception {

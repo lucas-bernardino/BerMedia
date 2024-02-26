@@ -94,10 +94,11 @@ public class AuthenticationService implements UserDetailsService {
     }
 
     public User getUser(String token) {
-        if (token == null) {throw new IllegalArgumentException("Token must not be null");}
+        if (token == null) {
+            throw new IllegalArgumentException("Token must not be null");
+        }
         try {
             token = token.replace("Bearer ", "");
-            System.out.println("TOKEN AFTER REPLACE:" + token);
             String username = tokenService.validateToken(token);
             Optional<User> user = userRepository.findUserByUsername(username);
             return user.orElse(null);
