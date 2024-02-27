@@ -30,7 +30,7 @@ public class CommentController {
 
     @GetMapping("/{imdbId}")
     @JsonView(View.Default.class)
-    public ResponseEntity<List<Comment>> getAllComentsFromMedia(@PathVariable String imdbId) {
+    public ResponseEntity<List<Comment>> getAllCommentsFromMedia(@PathVariable String imdbId) {
         List<Comment> comments = commentService.getAllCommentsFromMedia(imdbId);
         if (comments == null) {
             return ResponseEntity.ok().body(new ArrayList<>());
