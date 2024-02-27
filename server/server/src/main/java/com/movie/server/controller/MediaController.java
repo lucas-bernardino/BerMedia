@@ -63,9 +63,6 @@ public class MediaController {
     @JsonView(View.Default.class)
     public ResponseEntity<Media> getMediaByImdbId(@PathVariable String id) {
         Media media = mediaService.getMediaByImdbId(id);
-        if (media == null) {
-            return ResponseEntity.notFound().build();
-        }
         return ResponseEntity.ok().body(media);
     }
 

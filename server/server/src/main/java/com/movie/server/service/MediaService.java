@@ -6,6 +6,7 @@ import com.movie.server.model.Media;
 import com.movie.server.model.User;
 import com.movie.server.repository.MediaRepository;
 import com.movie.server.repository.UserRepository;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -87,17 +88,46 @@ public class MediaService {
     }
 
     public Media getMediaByImdbId(String id) {
-        return mediaRepository.findByImdbId(id);
+        try {
+            if (id == null) {
+                throw new IllegalArgumentException("ID must not be null");
+            }
+            Media media = mediaRepository.findByImdbId(id);
+            if (media == null) {
+                throw new NotFoundException("Media not found");
+            }
+            return media;
+        } catch (Exception e) {
+            throw new DatabaseOperationException("Error finding media by IMDB id", e);
+        }
     }
 
     @Transactional
     public void deleteMediaByImdbId(String imdbId, String token) {
-        Media media = mediaRepository.findByImdbId(imdbId);
-        User user = authenticationService.getUser(token);
-        List<Media> userMedias = user.getMedias();
-        userMedias.remove(media);
-        user.setMedias(userMedias);
+        if (imdbId == null) {
+            throw new IllegalArgumentException("ID must not be null");
+        }
+        if (token == null) {
+            throw new IllegalArgumentException("Token must not be null");
+        }
+        try {
+            Media media = mediaRepository.findByImdbId(imdbId);
+            if (media == null) {
+                throw new NotFoundException("Media to be deleted does not exist");
+            }
+            User user = authenticationService.getUser(token);
+            if (user == null) {
+                throw new NotFoundException("User does not exist");
+            }
+            List<Media> userMedias = user.getMedias();
+            if (!userMedias.contains(media)) {
+                throw new NotFoundException("User is not linked to this media");
+            }
+            userMedias.remove(media);
+            user.setMedias(userMedias);
+        } catch (Exception e) {
+            throw new DatabaseOperationException("Error deleting media by id", e);
+        }
     }
-
 
 }
