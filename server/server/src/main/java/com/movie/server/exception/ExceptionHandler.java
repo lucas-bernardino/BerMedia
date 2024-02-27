@@ -39,4 +39,10 @@ public class ExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(errorMessageDto);
     }
 
+    @org.springframework.web.bind.annotation.ExceptionHandler(DatabaseOperationException.class)
+    public ResponseEntity<ErrorMessageDto> databaseOperationExceptionHandler(DatabaseOperationException exception) {
+        ErrorMessageDto errorMessageDto = new ErrorMessageDto(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage(), exception.getCause());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorMessageDto);
+    }
+
 }

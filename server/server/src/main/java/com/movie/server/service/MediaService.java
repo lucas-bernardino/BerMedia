@@ -1,11 +1,11 @@
 package com.movie.server.service;
 
+import com.movie.server.exception.DatabaseOperationException;
 import com.movie.server.exception.NotFoundException;
 import com.movie.server.model.Media;
 import com.movie.server.model.User;
 import com.movie.server.repository.MediaRepository;
 import com.movie.server.repository.UserRepository;
-import org.hibernate.ObjectNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,22 +29,33 @@ public class MediaService {
     }
 
     public List<Media> getAllMediasByUsername(String username) {
-        Optional<User> user = userService.getUserByUsername(username);
-        if (user.isPresent()) {
-            return user.get().getMedias();
+        try {
+            if (username == null) {
+                throw new IllegalArgumentException("Username argument must not be null");
+            }
+            Optional<User> user = userService.getUserByUsername(username);
+            if (user.isPresent()) {
+                return user.get().getMedias();
+            }
+            return new ArrayList<>();
+        } catch (Exception e) {
+            throw new DatabaseOperationException("Error getting all medias by username", e);
         }
-        return new ArrayList<>();
+
     }
 
-
-    // pegar todos os usuarios do media -> pegar o ID de cada usuario -> comparar se existe no repostorio. Se todos existirem, faz a operacao. Caso contrario, exception.
-    public Media createMedia(Media media) {
-        List<User> user = media.getUsers();
-        int numberOfElementsThatExists = user.stream().filter(u -> userRepository.existsById(u.getId())).toList().size();
-        if (user.size() != numberOfElementsThatExists) {
-            throw new ObjectNotFoundException("Media contains users that do not exist", media);
+    @Transactional
+    public void createMedia(Media media) {
+        try {
+            List<User> user = media.getUsers();
+            int numberOfElementsThatExists = user.stream().filter(u -> userRepository.existsById(u.getId())).toList().size();
+            if (user.size() != numberOfElementsThatExists) {
+                throw new NotFoundException("Media contains users that do not exist");
+            }
+            mediaRepository.save(media);
+        } catch (Exception e) {
+            throw new DatabaseOperationException("Error saving media to the database", e);
         }
-        return mediaRepository.save(media);
     }
 
     public List<Media> getAllMedias() {

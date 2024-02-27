@@ -1,9 +1,7 @@
 package com.movie.server.service;
 
 import com.movie.server.auth.TokenService;
-import com.movie.server.exception.AuthFieldException;
-import com.movie.server.exception.LoginException;
-import com.movie.server.exception.RegisterException;
+import com.movie.server.exception.*;
 import com.movie.server.model.User;
 import com.movie.server.model.dto.AuthenticationDTO;
 import com.movie.server.model.dto.LoginResponseDto;
@@ -101,9 +99,12 @@ public class AuthenticationService implements UserDetailsService {
             token = token.replace("Bearer ", "");
             String username = tokenService.validateToken(token);
             Optional<User> user = userRepository.findUserByUsername(username);
+            if (user.isEmpty()) {
+                throw new NotFoundException(String.format("User with username %s does not exist", username));
+            }
             return user.orElse(null);
         } catch (Exception e) {
-            throw new RuntimeException("An error occured when trying to access the user token", e);
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
         }
     }
 }
