@@ -29,3 +29,13 @@ export interface IComment {
   userComment: string;
   createdOn?: string;
 }
+
+export interface IException {
+  httpStatus: string;
+  message: string;
+}
+
+export interface IForm {
+  username: string;
+  password: string;
+}

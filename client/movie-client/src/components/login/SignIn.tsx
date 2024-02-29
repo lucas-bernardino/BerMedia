@@ -2,10 +2,10 @@ import { Link, useNavigate } from "react-router-dom";
 import { useUser } from "../../utils/useUserHook";
 import { useState } from "react";
 import { setTokenLocalStorage } from "../../utils/helpers";
+import { IException, IForm } from "../../utils/interfaces";
 
-interface IForm {
-  username: string;
-  password: string;
+interface IToken {
+  token: string;
 }
 
 function SignIn() {
@@ -18,7 +18,8 @@ function SignIn() {
   const [username, setUsername] = useState<string>("");
   const [password, setPassword] = useState<string>("");
 
-  const [message, setMessage] = useState<boolean>(false);
+  const [messageFlag, setMessageFlag] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
 
   const signIn = async (e: any) => {
     e.preventDefault();
@@ -30,16 +31,21 @@ function SignIn() {
       },
       body: JSON.stringify(userForm),
     });
-    const text = response.status;
-    if (text == 200) {
-      const token = (await response.json()).token;
+
+    const status = response.status;
+    const responseJson: IException | IToken = await response.json();
+
+    if (status == 200) {
+      const token = (responseJson as IToken).token;
       setTokenLocalStorage(token);
       navigate("/");
     }
-    if (text == 403) {
-      setMessage(true);
+    if (status == 400 || status == 403) {
+      const exceptionMessage = (responseJson as IException).message;
+      setMessageFlag(true);
+      setMessage(exceptionMessage);
       setTimeout(() => {
-        setMessage(false);
+        setMessageFlag(false);
       }, 2000);
     }
   };
@@ -48,9 +54,9 @@ function SignIn() {
     <>
       <div className="flex bg-gradient-to-b from-gray-950 to-slate-800 h-dvh content-center justify-center ">
         <div className="flex flex-col border-2 w-4/12 h-5/6 rounded-3xl border-white items-center self-center">
-          {message ? (
+          {messageFlag ? (
             <div className="text-slate-50 font-bold fixed w-[270px] h-[70px] border border-black bg-red-700 rounded-3xl text-center mt-3 flex items-center justify-center">
-              INCORRECT USERNAME OR PASSWORD
+              {message ?? message}
             </div>
           ) : (
             ""
