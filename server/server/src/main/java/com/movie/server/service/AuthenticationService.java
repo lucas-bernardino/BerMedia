@@ -65,6 +65,11 @@ public class AuthenticationService implements UserDetailsService {
             return new LoginResponseDto(token);
         } catch (AuthenticationException e) {
             throw new LoginException();
+        } catch (AuthFieldException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
         }
     }
 
@@ -85,10 +90,18 @@ public class AuthenticationService implements UserDetailsService {
         if (userRepository.findByUsername(registerDto.username()) != null) {
             throw new RegisterException();
         }
-        String encryptedPassword = new BCryptPasswordEncoder().encode(registerDto.password());
-        User newUser = new User(registerDto.username(), encryptedPassword, registerDto.role() != null ? registerDto.role() : Role.valueOf("USER"));
-        userRepository.save(newUser);
-        return newUser;
+        try {
+            String encryptedPassword = new BCryptPasswordEncoder().encode(registerDto.password());
+            User newUser = new User(registerDto.username(), encryptedPassword, registerDto.role() != null ? registerDto.role() : Role.valueOf("USER"));
+            userRepository.save(newUser);
+            return newUser;
+        } catch (AuthFieldException | RegisterException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
+        }
+
     }
 
     public User getUser(String token) {
@@ -103,7 +116,10 @@ public class AuthenticationService implements UserDetailsService {
                 throw new NotFoundException(String.format("User with username %s does not exist", username));
             }
             return user.orElse(null);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
         }
     }

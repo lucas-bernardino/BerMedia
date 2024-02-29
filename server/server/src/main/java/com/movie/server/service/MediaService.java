@@ -39,7 +39,10 @@ public class MediaService {
                 return user.get().getMedias();
             }
             return new ArrayList<>();
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error getting all medias by username", e);
         }
 
@@ -54,7 +57,10 @@ public class MediaService {
                 throw new NotFoundException("Media contains users that do not exist");
             }
             mediaRepository.save(media);
-        } catch (Exception e) {
+        } catch (NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error saving media to the database", e);
         }
     }
@@ -63,6 +69,7 @@ public class MediaService {
         return mediaRepository.findAll();
     }
 
+    @Transactional
     public void addUserToMedia(String imdbId, Long userId) {
 
         if (imdbId == null) {
@@ -72,19 +79,26 @@ public class MediaService {
         if (userId == null) {
             throw new IllegalArgumentException("Missing userId field");
         }
-
-        Media media = mediaRepository.findByImdbId(imdbId);
-        if (media == null) {
-            throw new NotFoundException(String.format("Media with id (%s) not found.", imdbId));
+        try {
+            Media media = mediaRepository.findByImdbId(imdbId);
+            if (media == null) {
+                throw new NotFoundException(String.format("Media with id (%s) not found.", imdbId));
+            }
+            Optional<User> newUser = userService.getUserById(userId);
+            if (newUser.isEmpty()) {
+                throw new NotFoundException(String.format("User with id (%s) not found.", imdbId));
+            }
+            List<User> mediaUsers = media.getUsers();
+            mediaUsers.add(newUser.get());
+            media.setUsers(mediaUsers);
+            mediaRepository.save(media);
+        } catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
         }
-        Optional<User> newUser = userService.getUserById(userId);
-        if (newUser.isEmpty()) {
-            throw new NotFoundException(String.format("User with id (%s) not found.", imdbId));
-        };
-        List<User> mediaUsers = media.getUsers();
-        mediaUsers.add(newUser.get());
-        media.setUsers(mediaUsers);
-        mediaRepository.save(media);
+        catch (Exception e){
+            throw new DatabaseOperationException("Error adding user to media", e);
+        }
+
     }
 
     public Media getMediaByImdbId(String id) {
@@ -93,11 +107,16 @@ public class MediaService {
                 throw new IllegalArgumentException("ID must not be null");
             }
             Media media = mediaRepository.findByImdbId(id);
+            System.out.println("MEDIA VALUE: " + media);
             if (media == null) {
                 throw new NotFoundException("Media not found");
             }
             return media;
-        } catch (Exception e) {
+        }
+        catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error finding media by IMDB id", e);
         }
     }
@@ -125,7 +144,11 @@ public class MediaService {
             }
             userMedias.remove(media);
             user.setMedias(userMedias);
-        } catch (Exception e) {
+
+        } catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error deleting media by id", e);
         }
     }

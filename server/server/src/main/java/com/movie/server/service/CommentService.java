@@ -52,7 +52,10 @@ public class CommentService {
             comments.add(newComment);
             media.setComments(comments);
             mediaRepository.save(media);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error occurred when adding comment to media", e);
         }
 
@@ -68,7 +71,10 @@ public class CommentService {
                 return medias.getComments();
             }
             return null;
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error occurred when getting comments from media", e);
         }
 
@@ -80,7 +86,10 @@ public class CommentService {
         }
         try {
             return commentRepository.countByMediaImdbId(imdbId);
-        } catch (Exception e) {
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+        catch (Exception e) {
             throw new DatabaseOperationException("Error occurred when getting the number of comments from media", e);
         }
     }
