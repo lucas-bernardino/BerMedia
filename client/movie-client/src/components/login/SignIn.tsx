@@ -56,7 +56,7 @@ function SignIn() {
         <div className="flex flex-col border-2 w-4/12 h-5/6 rounded-3xl border-white items-center self-center">
           {messageFlag ? (
             <div className="text-slate-50 font-bold fixed w-[270px] h-[70px] border border-black bg-red-700 rounded-3xl text-center mt-3 flex items-center justify-center">
-              {message ?? message}
+              {message.toUpperCase() ?? message}
             </div>
           ) : (
             ""

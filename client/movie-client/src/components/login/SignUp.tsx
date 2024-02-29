@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { IException } from "../../utils/interfaces";
 
 interface IForm {
   username: string;
@@ -14,8 +15,10 @@ function SignUp() {
   const [checkPassword, setCheckPassword] = useState<string>("");
 
   const [success, setSuccess] = useState<boolean>(false);
-  const [error, setError] = useState<boolean>(false);
   const [message, setMessage] = useState<boolean>(false);
+
+  const [exceptionFlag, setExceptionFlag] = useState<boolean>(false);
+  const [exceptionMessage, setExceptionMessage] = useState<string>("");
 
   const signUp = async (e: any) => {
     e.preventDefault();
@@ -34,18 +37,21 @@ function SignUp() {
       },
       body: JSON.stringify(userForm),
     });
-    const text = response.status;
-    if (text == 200) {
+    const status = response.status;
+
+    if (status == 200) {
       setSuccess(true);
       setTimeout(() => {
         setSuccess(false);
         navigate("/signin");
       }, 2000);
     }
-    if (text == 400) {
-      setError(true);
+    if (status == 400 || status == 403) {
+      const responseJson: IException = await response.json();
+      setExceptionFlag(true);
+      setExceptionMessage(responseJson.message);
       setTimeout(() => {
-        setError(false);
+        setExceptionFlag(false);
       }, 2000);
     }
   };
@@ -61,9 +67,9 @@ function SignUp() {
           ) : (
             ""
           )}
-          {error ? (
+          {exceptionFlag ? (
             <div className="text-slate-50 font-bold fixed w-[270px] h-[70px] border border-black bg-red-700 rounded-3xl text-center mt-3 flex items-center justify-center">
-              USERNAME ALREADY USED
+              {exceptionMessage.toUpperCase() ?? exceptionMessage}
             </div>
           ) : (
             ""
