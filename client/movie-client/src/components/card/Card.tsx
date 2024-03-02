@@ -3,7 +3,7 @@ import { IoInformationCircle } from "react-icons/io5";
 import { PiCalendarFill } from "react-icons/pi";
 import { IoCloseCircle } from "react-icons/io5";
 import { IoBookmarkSharp } from "react-icons/io5";
-import { IComment, IMedia } from "../../utils/interfaces";
+import { IComment, IException, IMedia } from "../../utils/interfaces";
 import { BiSolidCameraMovie } from "react-icons/bi";
 
 import {
@@ -36,8 +36,19 @@ function ShowCard({ media }: IProps) {
         },
       },
     );
-    const numberComments = await responseNumber.json();
-    setMediaCommentsNumber(numberComments);
+
+    const responseNumberStatus = responseNumber.status;
+
+    if (responseNumberStatus === 200) {
+      const numberComments = await responseNumber.json();
+      setMediaCommentsNumber(numberComments);
+    } else {
+      const responseException: IException = await responseNumber.json();
+      alert(
+        `Error ${responseException.httpStatus}\nMessage: ${responseException.message}`,
+      );
+      return;
+    }
   };
 
   const getCommentsDataFromMedia = async () => {
@@ -50,9 +61,18 @@ function ShowCard({ media }: IProps) {
         },
       },
     );
+    const responseNumberStatus = responseComments.status;
 
-    const comments = await responseComments.json();
-    setMediaComments(comments);
+    if (responseNumberStatus === 200) {
+      const comments = await responseComments.json();
+      setMediaComments(comments);
+    } else {
+      const responseException: IException = await responseComments.json();
+      alert(
+        `Error ${responseException.httpStatus}\nMessage: ${responseException.message}`,
+      );
+      return;
+    }
   };
 
   useEffect(() => {
@@ -74,16 +94,27 @@ function ShowCard({ media }: IProps) {
       navigate("/signin");
     }
 
-    const flagContinue = await unsaveMedia({ media }, token as string);
-
-    if (flagContinue) {
-      window.location.reload();
+    try {
+      const flagContinue = await unsaveMedia({ media }, token as string);
+      if (flagContinue) {
+        window.location.reload();
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message);
       return;
     }
 
-    await handleMediaCreation({ media }, token as string);
+    try {
+      await handleMediaCreation({ media }, token as string);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message);
+      return;
+    }
 
-    await fetch("http://localhost:8080/media/newuser", {
+    const response = await fetch("http://localhost:8080/media/newuser", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -94,6 +125,14 @@ function ShowCard({ media }: IProps) {
         userId: user.id,
       }),
     });
+
+    if (response.status !== 200) {
+      const responseException: IException = await response.json();
+      alert(
+        `Error ${responseException.httpStatus}\nMessage: ${responseException.message}`,
+      );
+      return;
+    }
   };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -111,7 +150,13 @@ function ShowCard({ media }: IProps) {
 
     setShowComments(!showComments);
 
-    await handleMediaCreation({ media }, token as string);
+    try {
+      await handleMediaCreation({ media }, token as string);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      alert(error.message);
+      return;
+    }
 
     const userComment = e.target.comment.value as string;
     if (userComment.length < 2) {
@@ -119,24 +164,38 @@ function ShowCard({ media }: IProps) {
       return;
     }
 
-    await fetch(`http://localhost:8080/comment/${media.imdbId}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token as string}`,
+    const postComment = await fetch(
+      `http://localhost:8080/comment/${media.imdbId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token as string}`,
+        },
+        body: JSON.stringify({
+          userComment: userComment,
+        }),
       },
-      body: JSON.stringify({
-        userComment: userComment,
-      }),
-    });
-    mediaComments
-      ? setMediaComments((prev) => [
-          ...prev!,
-          { username: user.username, userComment: userComment },
-        ])
-      : setMediaComments([
-          { username: user.username, userComment: userComment },
-        ]);
+    );
+
+    const postCommentStatus = postComment.status;
+
+    if (postCommentStatus === 200) {
+      mediaComments
+        ? setMediaComments((prev) => [
+            ...prev!,
+            { username: user.username, userComment: userComment },
+          ])
+        : setMediaComments([
+            { username: user.username, userComment: userComment },
+          ]);
+    } else {
+      const responseException: IException = await postComment.json();
+      alert(
+        `Error ${responseException.httpStatus}\nMessage: ${responseException.message}`,
+      );
+      return;
+    }
   };
 
   return (
@@ -231,7 +290,8 @@ function ShowCard({ media }: IProps) {
                           <div className="font-light">
                             {item.createdOn?.slice(8, 10)}/
                             {item.createdOn?.slice(5, 7)} -{" "}
-                            {item.createdOn?.slice(11, 16)}
+                            {item.createdOn?.slice(11, 16)} - {"  "}
+                            GMT
                           </div>
                         </div>
                         <div className="text-sky-50 font-sans">
@@ -285,6 +345,13 @@ const unsaveMedia = async (
       Authorization: `Bearer ${token as string}`,
     },
   });
+
+  if (getMediaByToken.status !== 200) {
+    const exceptionResponse: IException = await getMediaByToken.json();
+    throw new Error(
+      `Error ${exceptionResponse.httpStatus}\nMessage: ${exceptionResponse.message}`,
+    );
+  }
 
   let noMoreOperations: boolean = false;
 
@@ -347,6 +414,11 @@ const handleMediaCreation = async (
         comments: media.comments,
       }),
     });
+  } else if (getMediaResponse.status !== 200) {
+    const responseException: IException = await getMediaResponse.json();
+    throw new Error(
+      `Error ${responseException.httpStatus}\nMessage: ${responseException.message}`,
+    );
   }
 };
 
