@@ -1,5 +1,6 @@
 package com.movie.server.service;
 
+import com.movie.server.exception.DatabaseOperationException;
 import com.movie.server.exception.NotFoundException;
 import com.movie.server.model.Media;
 import com.movie.server.model.User;
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -37,12 +39,9 @@ public class MediaServiceTest {
     @InjectMocks
     MediaService mediaService;
 
-
-
     @Test
     @DisplayName("Should create a media sucessfully")
     void createMediaSuccessfully() {
-        User user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
         Media media = new Media(1L,
                 "The Shawshank Redemption",
                 "tt0111161",
@@ -56,10 +55,9 @@ public class MediaServiceTest {
                 "movie",
                 1994,
                 0,
-                List.of(user),
+                List.of(),
                 List.of());
 
-        when(userRepository.existsById(1L)).thenReturn(true);
         mediaService.createMedia(media);
         verify(mediaRepository).save(media);
     }
@@ -154,5 +152,95 @@ public class MediaServiceTest {
         Assertions.assertEquals("Username argument must not be null", thrown.getMessage());
 
     }
+
+    @Test
+    @DisplayName("Should succesfully add user to a media")
+    void addUserToMediaSuccessfully() {
+        User user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
+        Media media = new Media(1L,
+                "The Shawshank Redemption",
+                "tt0111161",
+                "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
+                "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+                "16",
+                List.of("Drama"),
+                8520,
+                9.3F,
+                1,
+                "movie",
+                1994,
+                0,
+                new ArrayList<>(),
+                List.of());
+
+        when(mediaRepository.findByImdbId(media.getImdbId())).thenReturn(media);
+        when(userService.getUserById(user.getId())).thenReturn(Optional.of(user));
+
+        mediaService.addUserToMedia(media.getImdbId(), user.getId());
+
+        verify(mediaRepository).save(media);
+
+        Assertions.assertTrue(media.getUsers().contains(user));
+
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when adding user to a media with null imdbId field")
+    void addUserToMediaExceptionIllegalArgumentException1() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            mediaService.addUserToMedia(null, 1L);
+        });
+
+        Assertions.assertEquals("Missing imdbId field", thrown.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when adding user to a media with null userId field")
+    void addUserToMediaExceptionIllegalArgumentException2() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            mediaService.addUserToMedia("123abc", null);
+        });
+
+        Assertions.assertEquals("Missing userId field", thrown.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when adding user to a media with null media")
+    void addUserToMediaExceptionNotFoundException1() {
+
+        when(mediaRepository.findByImdbId("123abc")).thenReturn(null);
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.addUserToMedia("123abc", 1L);
+        });
+
+        Assertions.assertEquals(String.format("Media with id (%s) not found.", "123abc"), thrown.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when adding user to a media with null media")
+    void addUserToMediaExceptionNotFoundException2() {
+
+
+        when(mediaRepository.findByImdbId("123abc")).thenReturn(new Media());
+
+        Optional<User> user = Optional.of(new User());
+
+        when(userService.getUserById(1L)).thenReturn(Optional.<User>empty());
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.addUserToMedia("123abc", 1L);
+        });
+
+        Assertions.assertEquals(String.format("User with id (%s) not found.", 1L), thrown.getMessage());
+
+    }
+
+    //TODO: FAZER A CONTROLLER OU CONTINUAR COM OS METODOS DO USERSERVICE
 
 }
