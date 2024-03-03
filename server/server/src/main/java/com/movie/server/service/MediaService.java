@@ -107,7 +107,6 @@ public class MediaService {
                 throw new IllegalArgumentException("ID must not be null");
             }
             Media media = mediaRepository.findByImdbId(id);
-            System.out.println("MEDIA VALUE: " + media);
             if (media == null) {
                 throw new NotFoundException("Media not found");
             }

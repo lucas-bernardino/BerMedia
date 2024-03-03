@@ -1,6 +1,5 @@
 package com.movie.server.service;
 
-import com.movie.server.exception.DatabaseOperationException;
 import com.movie.server.exception.NotFoundException;
 import com.movie.server.model.Media;
 import com.movie.server.model.User;
@@ -8,13 +7,11 @@ import com.movie.server.model.enums.Role;
 import com.movie.server.repository.MediaRepository;
 import com.movie.server.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -241,6 +238,57 @@ public class MediaServiceTest {
 
     }
 
-    //TODO: FAZER A CONTROLLER OU CONTINUAR COM OS METODOS DO USERSERVICE
+    @Test
+    @DisplayName("Should successfully get media by ImdbId")
+    void getMediaByImdbIdSuccessfully() {
 
+        Media media = new Media(1L,
+                "The Shawshank Redemption",
+                "tt0111161",
+                "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
+                "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
+                "16",
+                List.of("Drama"),
+                8520,
+                9.3F,
+                1,
+                "movie",
+                1994,
+                0,
+                List.of(),
+                List.of());
+
+
+        when(mediaRepository.findByImdbId(media.getImdbId())).thenReturn(media);
+
+        var mediaReturned = mediaService.getMediaByImdbId(media.getImdbId());
+
+        Assertions.assertEquals(media, mediaReturned);
+
+    }
+
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when getting media with ImdbId null")
+    void getMediaByImdbIdExceptionIllegalArgumentException() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            mediaService.getMediaByImdbId(null);
+        });
+
+        Assertions.assertEquals("ID must not be null", thrown.getMessage());
+
+    }
+
+    @Test
+    @DisplayName("Should throw NotFoundException when getting media that doesn't exist")
+    void getMediaByImdbIdExceptionNotFoundException() {
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.getMediaByImdbId("");
+        });
+
+        Assertions.assertEquals("Media not found", thrown.getMessage());
+
+    }
 }
