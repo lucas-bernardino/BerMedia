@@ -86,7 +86,7 @@ public class MediaService {
             }
             Optional<User> newUser = userService.getUserById(userId);
             if (newUser.isEmpty()) {
-                throw new NotFoundException(String.format("User with id (%s) not found.", imdbId));
+                throw new NotFoundException(String.format("User with id (%s) not found.", userId));
             }
             List<User> mediaUsers = media.getUsers();
             mediaUsers.add(newUser.get());
