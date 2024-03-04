@@ -144,6 +144,14 @@ public class MediaService {
             userMedias.remove(media);
             user.setMedias(userMedias);
 
+            List<User> mediaUsers = media.getUsers();
+            if (!mediaUsers.contains(user)) {
+                throw new NotFoundException("Media is not linked to this user");
+            }
+
+            mediaUsers.remove(user);
+            media.setUsers(mediaUsers);
+
         } catch (IllegalArgumentException | NotFoundException e) {
             throw e;
         }
