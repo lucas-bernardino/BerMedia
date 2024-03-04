@@ -7,6 +7,7 @@ import com.movie.server.model.enums.Role;
 import com.movie.server.repository.MediaRepository;
 import com.movie.server.repository.UserRepository;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,10 +38,17 @@ public class MediaServiceTest {
     @InjectMocks
     MediaService mediaService;
 
-    @Test
-    @DisplayName("Should create a media sucessfully")
-    void createMediaSuccessfully() {
-        Media media = new Media(1L,
+    private Media mediaEmpty;
+
+    private Media mediaFilled;
+
+    private User user;
+    @BeforeEach
+    void setup() {
+
+        user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
+
+        mediaEmpty = new Media(1L,
                 "The Shawshank Redemption",
                 "tt0111161",
                 "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
@@ -52,19 +61,10 @@ public class MediaServiceTest {
                 "movie",
                 1994,
                 0,
-                List.of(),
+                new ArrayList<>(),
                 List.of());
 
-        mediaService.createMedia(media);
-        verify(mediaRepository).save(media);
-    }
-
-    @Test
-    @DisplayName("Should thrown an exception when creating media with user that doesn't exist in the database")
-    void createMediaException() {
-        User user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
-
-        Media media = new Media(1L,
+        mediaFilled = new Media(1L,
                 "The Shawshank Redemption",
                 "tt0111161",
                 "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
@@ -80,8 +80,23 @@ public class MediaServiceTest {
                 List.of(user),
                 List.of());
 
+
+    }
+
+    @Test
+    @DisplayName("Should create a media sucessfully")
+    void createMediaSuccessfully() {
+
+        mediaService.createMedia(mediaEmpty);
+        verify(mediaRepository).save(mediaEmpty);
+    }
+
+    @Test
+    @DisplayName("Should thrown an exception when creating media with user that doesn't exist in the database")
+    void createMediaException() {
+
         Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
-            mediaService.createMedia(media);
+            mediaService.createMedia(mediaFilled);
         });
 
         Assertions.assertEquals("Media contains users that do not exist", thrown.getMessage());
@@ -91,22 +106,6 @@ public class MediaServiceTest {
     @Test
     @DisplayName("Should get medias by username sucessfully")
     void getAllMediasByUsernameSuccessfully() {
-        User user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
-        Media media1 = new Media(1L,
-                "The Shawshank Redemption",
-                "tt0111161",
-                "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
-                "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
-                "16",
-                List.of("Drama"),
-                8520,
-                9.3F,
-                1,
-                "movie",
-                1994,
-                0,
-                List.of(user),
-                List.of());
 
         Media media2 = new Media(2L,
                 "Breaking Bad",
@@ -124,14 +123,14 @@ public class MediaServiceTest {
                 List.of(user),
                 List.of());
 
-        user.setMedias(List.of(media1, media2));
+        user.setMedias(List.of(mediaFilled, media2));
 
         when(userService.getUserByUsername(user.getUsername())).thenReturn(Optional.of(user));
 
         List<Media> medias = mediaService.getAllMediasByUsername(user.getUsername());
 
         Assertions.assertAll(() -> {
-            Assertions.assertTrue(medias.contains(media1));
+            Assertions.assertTrue(medias.contains(mediaFilled));
             Assertions.assertTrue(medias.contains(media2));
         });
 
@@ -140,10 +139,10 @@ public class MediaServiceTest {
     @Test
     @DisplayName("Should thrown exception when getting medias with null username")
     void getAllMediasByUsernameException1() {
-        User user = new User(1L, null,  "senha", List.of(), Role.USER);
+        User userNullUsername = new User(1L, null,  "senha", List.of(), Role.USER);
 
         Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            mediaService.getAllMediasByUsername(user.getUsername());
+            mediaService.getAllMediasByUsername(userNullUsername.getUsername());
         });
 
         Assertions.assertEquals("Username argument must not be null", thrown.getMessage());
@@ -153,31 +152,15 @@ public class MediaServiceTest {
     @Test
     @DisplayName("Should succesfully add user to a media")
     void addUserToMediaSuccessfully() {
-        User user = new User(1L, "lucas",  "senha", List.of(), Role.USER);
-        Media media = new Media(1L,
-                "The Shawshank Redemption",
-                "tt0111161",
-                "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
-                "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
-                "16",
-                List.of("Drama"),
-                8520,
-                9.3F,
-                1,
-                "movie",
-                1994,
-                0,
-                new ArrayList<>(),
-                List.of());
 
-        when(mediaRepository.findByImdbId(media.getImdbId())).thenReturn(media);
+        when(mediaRepository.findByImdbId(mediaEmpty.getImdbId())).thenReturn(mediaEmpty);
         when(userService.getUserById(user.getId())).thenReturn(Optional.of(user));
 
-        mediaService.addUserToMedia(media.getImdbId(), user.getId());
+        mediaService.addUserToMedia(mediaEmpty.getImdbId(), user.getId());
 
-        verify(mediaRepository).save(media);
+        verify(mediaRepository).save(mediaEmpty);
 
-        Assertions.assertTrue(media.getUsers().contains(user));
+        Assertions.assertTrue(mediaEmpty.getUsers().contains(user));
 
     }
 
@@ -226,8 +209,6 @@ public class MediaServiceTest {
 
         when(mediaRepository.findByImdbId("123abc")).thenReturn(new Media());
 
-        Optional<User> user = Optional.of(new User());
-
         when(userService.getUserById(1L)).thenReturn(Optional.<User>empty());
 
         Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
@@ -242,31 +223,13 @@ public class MediaServiceTest {
     @DisplayName("Should successfully get media by ImdbId")
     void getMediaByImdbIdSuccessfully() {
 
-        Media media = new Media(1L,
-                "The Shawshank Redemption",
-                "tt0111161",
-                "Over the course of several years, two convicts form a friendship, seeking consolation and, eventually, redemption through basic compassion.",
-                "https://m.media-amazon.com/images/M/MV5BNDE3ODcxYzMtY2YzZC00NmNlLWJiNDMtZDViZWM2MzIxZDYwXkEyXkFqcGdeQXVyNjAwNDUxODI@._V1_.jpg",
-                "16",
-                List.of("Drama"),
-                8520,
-                9.3F,
-                1,
-                "movie",
-                1994,
-                0,
-                List.of(),
-                List.of());
+        when(mediaRepository.findByImdbId(mediaEmpty.getImdbId())).thenReturn(mediaEmpty);
 
+        var mediaReturned = mediaService.getMediaByImdbId(mediaEmpty.getImdbId());
 
-        when(mediaRepository.findByImdbId(media.getImdbId())).thenReturn(media);
-
-        var mediaReturned = mediaService.getMediaByImdbId(media.getImdbId());
-
-        Assertions.assertEquals(media, mediaReturned);
+        Assertions.assertEquals(mediaEmpty, mediaReturned);
 
     }
-
 
     @Test
     @DisplayName("Should throw IllegalArgumentException when getting media with ImdbId null")
@@ -290,5 +253,108 @@ public class MediaServiceTest {
 
         Assertions.assertEquals("Media not found", thrown.getMessage());
 
+    }
+
+    @Test
+    @DisplayName("Should successfully delete media when passing its ImdbId")
+    void deleteMediaByImdbIdSuccessfully() {
+
+
+        mediaEmpty.setUsers(new ArrayList<>(List.of(user)));
+
+        user.setMedias(new ArrayList<>(List.of(mediaEmpty)));
+
+        when(mediaRepository.findByImdbId(mediaEmpty.getImdbId())).thenReturn(mediaEmpty);
+
+        when(authenticationService.getUser("token")).thenReturn(user);
+
+        mediaService.deleteMediaByImdbId(mediaEmpty.getImdbId(), "token");
+
+        Assertions.assertFalse(user.getMedias().contains(mediaEmpty));
+
+        Assertions.assertFalse(mediaEmpty.getUsers().contains(user));
+
+
+    }
+
+    @Test
+    @DisplayName("Should thrown IllegalArgumentException when deleting media with null imdbId")
+    void deleteMediaByImdbIdExceptionIllegalArgumentException1() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            mediaService.deleteMediaByImdbId(null, "");
+        });
+
+        Assertions.assertEquals("ID must not be null", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should thrown IllegalArgumentException when deleting media with null token")
+    void deleteMediaByImdbIdExceptionIllegalArgumentException2() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            mediaService.deleteMediaByImdbId("", null);
+        });
+
+        Assertions.assertEquals("Token must not be null", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should thrown NotFoundException when deleting media with media that doesn't exist")
+    void deleteMediaByImdbIdExceptionNotFoundException1() {
+
+        when(mediaRepository.findByImdbId("")).thenReturn(null);
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.deleteMediaByImdbId("", "");
+        });
+
+        Assertions.assertEquals("Media to be deleted does not exist", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should thrown NotFoundException when deleting media from user that doesn't exist")
+    void deleteMediaByImdbIdExceptionNotFoundException2() {
+
+        when(mediaRepository.findByImdbId("")).thenReturn(new Media());
+
+        when(authenticationService.getUser("")).thenReturn(null);
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.deleteMediaByImdbId("", "");
+        });
+
+        Assertions.assertEquals("User does not exist", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should thrown NotFoundException when deleting media with media that's not contained in user")
+    void deleteMediaByImdbIdExceptionNotFoundException3() {
+
+        when(mediaRepository.findByImdbId(mediaEmpty.getImdbId())).thenReturn(mediaEmpty);
+
+        when(authenticationService.getUser("token")).thenReturn(user);
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.deleteMediaByImdbId(mediaEmpty.getImdbId(), "token");
+        });
+
+        Assertions.assertEquals("User is not linked to this media", thrown.getMessage());
+    }
+
+    @Test
+    @DisplayName("Should thrown NotFoundException when deleting media with user that's not contained in media")
+    void deleteMediaByImdbIdExceptionNotFoundException4() {
+
+        when(mediaRepository.findByImdbId(mediaEmpty.getImdbId())).thenReturn(mediaEmpty);
+        when(authenticationService.getUser("token")).thenReturn(user);
+
+        user.setMedias(new ArrayList<>(List.of(mediaEmpty)));
+
+        Exception thrown = Assertions.assertThrows(NotFoundException.class, () -> {
+            mediaService.deleteMediaByImdbId(mediaEmpty.getImdbId(), "token");
+        });
+
+        Assertions.assertEquals("Media is not linked to this user", thrown.getMessage());
     }
 }
