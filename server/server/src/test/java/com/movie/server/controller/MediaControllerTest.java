@@ -26,6 +26,7 @@ import java.util.List;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -153,4 +154,19 @@ public class MediaControllerTest {
         verifyNoMoreInteractions(mediaService);
     }
 
+    @Test
+    @DisplayName("Should successfully delete the connection between a user and a media")
+    void deleteMediaByImdbIdSuccessfully() throws Exception {
+
+        doNothing().when(mediaService).deleteMediaByImdbId(media.getImdbId(), token);
+
+        mockMvc.perform(delete("/media/tt0111161")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", token)
+        ).andExpect(status().isOk());
+
+        verify(mediaService).deleteMediaByImdbId(media.getImdbId(), token);
+        verifyNoMoreInteractions(mediaService);
+
+    }
 }
