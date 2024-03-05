@@ -49,7 +49,6 @@ public class MediaControllerTest {
 
     private User user;
     private IdUserMediaDto idUserMediaDto;
-
     private String token;
 
     @BeforeEach
@@ -79,6 +78,8 @@ public class MediaControllerTest {
         mediaJson = mediaJson.replace(",\"users\":[]", "");
 
 
+        idUserMediaDto = new IdUserMediaDto(media.getImdbId(), user.getId());
+
     }
 
     @Test
@@ -95,6 +96,23 @@ public class MediaControllerTest {
         ).andExpect(status().isOk());
 
         verify(mediaService).createMedia(media);
+        verifyNoMoreInteractions(mediaService);
+
+    }
+
+    @Test
+    @DisplayName("Should add a user to a media successfully")
+    void addNewUserToMedia() throws Exception {
+        doNothing().when(mediaService).addUserToMedia(media.getImdbId(), user.getId());
+
+        String userMediaBody = objectMapper.writeValueAsString(idUserMediaDto);
+
+        mockMvc.perform(post("/media/newuser").
+                contentType(MediaType.APPLICATION_JSON)
+                .content(userMediaBody)
+        ).andExpect(status().isOk());
+
+        verify(mediaService).addUserToMedia(media.getImdbId(), user.getId());
         verifyNoMoreInteractions(mediaService);
 
     }
