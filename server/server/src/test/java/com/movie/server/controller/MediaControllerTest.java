@@ -102,7 +102,7 @@ public class MediaControllerTest {
 
     @Test
     @DisplayName("Should add a user to a media successfully")
-    void addNewUserToMedia() throws Exception {
+    void addNewUserToMediaSuccessfully() throws Exception {
         doNothing().when(mediaService).addUserToMedia(media.getImdbId(), user.getId());
 
         String userMediaBody = objectMapper.writeValueAsString(idUserMediaDto);
@@ -135,5 +135,22 @@ public class MediaControllerTest {
         verifyNoMoreInteractions(mediaService);
     }
 
+    @Test
+    @DisplayName("Should successfully return the media given the imdbId ")
+    void getMediaByImdbIdSuccessfully() throws Exception {
+
+        when(mediaService.getMediaByImdbId(media.getImdbId())).thenReturn(media);
+
+        String mediaBody = objectMapper.writeValueAsString(media);
+
+        mediaBody = mediaBody.replace(",\"users\":[]", "");
+
+        mockMvc.perform(get("/media/tt0111161")
+                .contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk()).andExpect(content().json(mediaBody));
+
+        verify(mediaService).getMediaByImdbId(media.getImdbId());
+        verifyNoMoreInteractions(mediaService);
+    }
 
 }
