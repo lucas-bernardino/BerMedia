@@ -82,6 +82,24 @@ public class MediaControllerTest {
     }
 
     @Test
+    @DisplayName("Should create a media successfully")
+    void createMediaSuccessfully() throws Exception {
+
+        String mediaBody = objectMapper.writeValueAsString(media);
+
+        doNothing().when(mediaService).createMedia(media);
+
+        mockMvc.perform(post("/media").
+                contentType(MediaType.APPLICATION_JSON).
+                content(mediaBody)
+        ).andExpect(status().isOk());
+
+        verify(mediaService).createMedia(media);
+        verifyNoMoreInteractions(mediaService);
+
+    }
+
+    @Test
     @DisplayName("Should return a list of medias successfully")
     void getAllMediasByUsernameSuccessfully() throws Exception {
         when(authenticationService.getUser(token)).thenReturn(user);
