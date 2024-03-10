@@ -163,4 +163,30 @@ public class CommentServiceTest {
         Assertions.assertEquals("ID must not be null", thrown.getMessage());
     }
 
+    @Test
+    @DisplayName("Should successfully return the number of comments from a media")
+    void getNumberOfComments() {
+        Comment comment1 = new Comment(1L, user.getUsername(), comment, media);
+        Comment comment2 = new Comment(1L, user.getUsername(), comment, media);
+        Comment comment3 = new Comment(1L, user.getUsername(), comment, media);
+        media.setComments(List.of(comment1, comment2, comment3));
+
+        commentService.getNumberOfComments(media.getImdbId());
+
+        Assertions.assertEquals(3, media.getComments().size());
+
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when getting the number of comments from a media with null imdbId")
+    void getNumberOfCommentsExceptionIllegalArgumentException() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            commentService.getNumberOfComments(null);
+        });
+
+        Assertions.assertEquals("ID must not be null", thrown.getMessage());
+
+    }
+
 }
