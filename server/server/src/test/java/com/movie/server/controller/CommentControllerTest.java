@@ -98,5 +98,28 @@ public class CommentControllerTest {
 
     }
 
+    @Test
+    @DisplayName("Should successfully get all comments from a media")
+    void getAllCommentsFromMedia() throws Exception {
+
+        Comment comment1 = new Comment(1L, user.getUsername(), comment.get("userComment"), (Instant) null);
+        Comment comment2 = new Comment(null, user.getUsername(), comment.get("userComment"), (Instant) null);
+
+        media.setComments(List.of(comment1, comment2));
+
+        String commentsBody = objectMapper.writeValueAsString(List.of(comment1, comment2));
+
+        commentsBody = commentsBody.replace("\"media\":null,", "");
+
+        when(commentService.getAllCommentsFromMedia(media.getImdbId())).thenReturn(List.of(comment1, comment2));
+
+        mockMvc.perform(get("/comment/tt0111161").
+                contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk()).andExpect(content().json(commentsBody));
+
+        verify(commentService).getAllCommentsFromMedia(media.getImdbId());
+        verifyNoMoreInteractions(commentService);
+
+    }
 
 }
