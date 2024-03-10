@@ -137,4 +137,30 @@ public class CommentServiceTest {
         Assertions.assertEquals("User does not exist", thrown.getMessage());
     }
 
+
+
+    @Test
+    @DisplayName("Should successfully return all the comments from a media")
+    void getAllCommentsFromMedia() {
+        Comment comment_ = new Comment(1L, user.getUsername(), comment, media);
+        media.setComments(List.of(comment_));
+
+        when(mediaRepository.findByImdbId(media.getImdbId())).thenReturn(media);
+
+        commentService.getAllCommentsFromMedia(media.getImdbId());
+
+        Assertions.assertTrue(media.getComments().contains(comment_));
+
+    }
+
+    @Test
+    @DisplayName("Should throw IllegalArgumentException when getting all the comments from a media with null imdbId ")
+    void getAllCommentsFromMediaExceptionIllegalArgumentException1() {
+
+        Exception thrown = Assertions.assertThrows(IllegalArgumentException.class, () -> {
+            commentService.getAllCommentsFromMedia(null);
+        });
+        Assertions.assertEquals("ID must not be null", thrown.getMessage());
+    }
+
 }
