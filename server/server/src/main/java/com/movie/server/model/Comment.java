@@ -44,6 +44,13 @@ public class Comment {
         this.media = media;
     }
 
+    public Comment(Long id, String username, String userComment, Instant createdOn) {
+        this.id = id;
+        this.username = username;
+        this.userComment = userComment;
+        this.createdOn = createdOn;
+    }
+
     @Column(name = "createdOn")
     @CreationTimestamp
     @JsonView({View.Default.class, View.Test.class})

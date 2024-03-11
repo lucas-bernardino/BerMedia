@@ -1,6 +1,7 @@
 package com.movie.server.service;
 
 import com.movie.server.auth.TokenService;
+import com.movie.server.exception.*;
 import com.movie.server.model.User;
 import com.movie.server.model.dto.AuthenticationDTO;
 import com.movie.server.model.dto.LoginResponseDto;
@@ -9,9 +10,9 @@ import com.movie.server.model.enums.Role;
 import com.movie.server.repository.UserRepository;
 import jakarta.validation.Valid;
 import org.springframework.context.ApplicationContext;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -41,35 +42,85 @@ public class AuthenticationService implements UserDetailsService {
 
     public LoginResponseDto login(@RequestBody @Valid AuthenticationDTO authenticationDTO) {
 
+        if (authenticationDTO.password() == null) {
+            throw new AuthFieldException("Password field is missing");
+        }
+        if (authenticationDTO.password().length() < 3) {
+            throw new AuthFieldException("Invalid password field. Must be at least three characters");
+        }
+        if (authenticationDTO.username() == null) {
+            throw new AuthFieldException("Username field is missing");
+        }
+        if (authenticationDTO.username().length() < 3) {
+            throw new AuthFieldException("Invalid username field. Must be at least three characters");
+        }
+
         authenticationManager = applicationContext.getBean(AuthenticationManager.class);
 
         var userAuth = new UsernamePasswordAuthenticationToken(authenticationDTO.username(), authenticationDTO.password());
-        var auth = authenticationManager.authenticate(userAuth);
-        String token = tokenService.generateToken((User) auth.getPrincipal());
 
-        return new LoginResponseDto(token);
+        try {
+            var auth = authenticationManager.authenticate(userAuth);
+            String token = tokenService.generateToken((User) auth.getPrincipal());
+            return new LoginResponseDto(token);
+        } catch (AuthenticationException e) {
+            throw new LoginException();
+        } catch (AuthFieldException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
+        }
     }
 
-    public User register(@RequestBody @Valid RegisterDto registerDto) {
-        if (userRepository.findByUsername(registerDto.username()) != null) {
-            return null;
+    public User register(@RequestBody RegisterDto registerDto) {
+        if (registerDto.password() == null) {
+            throw new AuthFieldException("Password field is missing");
         }
-        String encryptedPassword = new BCryptPasswordEncoder().encode(registerDto.password());
-        User newUser = new User(registerDto.username(), encryptedPassword, registerDto.role() != null ? registerDto.role() : Role.valueOf("USER"));
-        userRepository.save(newUser);
-        return newUser;
+        if (registerDto.password().length() < 3) {
+            throw new AuthFieldException("Invalid password field. Must be at least three characters");
+        }
+        if (registerDto.username() == null) {
+            throw new AuthFieldException("Username field is missing");
+        }
+        if (registerDto.username().length() < 3) {
+            throw new AuthFieldException("Invalid username field. Must be at least three characters");
+        }
+
+        if (userRepository.findByUsername(registerDto.username()) != null) {
+            throw new RegisterException();
+        }
+        try {
+            String encryptedPassword = new BCryptPasswordEncoder().encode(registerDto.password());
+            User newUser = new User(registerDto.username(), encryptedPassword, registerDto.role() != null ? registerDto.role() : Role.valueOf("USER"));
+            userRepository.save(newUser);
+            return newUser;
+        } catch (AuthFieldException | RegisterException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
+        }
+
     }
 
     public User getUser(String token) {
-        if (token == null) {throw new IllegalArgumentException("Token must not be null");}
+        if (token == null) {
+            throw new IllegalArgumentException("Token must not be null");
+        }
         try {
             token = token.replace("Bearer ", "");
-            System.out.println("TOKEN AFTER REPLACE:" + token);
             String username = tokenService.validateToken(token);
             Optional<User> user = userRepository.findUserByUsername(username);
+            if (user.isEmpty()) {
+                throw new NotFoundException(String.format("User with username %s does not exist", username));
+            }
             return user.orElse(null);
-        } catch (Exception e) {
-            throw new RuntimeException("An error occured when trying to access the user token", e);
+        } catch (IllegalArgumentException | NotFoundException e) {
+            throw e;
+        }
+        catch (Exception e) {
+            throw new DatabaseOperationException("An error occurred when trying to access the user token", e);
         }
     }
 }
