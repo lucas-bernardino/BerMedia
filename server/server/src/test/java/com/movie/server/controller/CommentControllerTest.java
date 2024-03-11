@@ -122,4 +122,19 @@ public class CommentControllerTest {
 
     }
 
+    @Test
+    @DisplayName("Should successfully return the number of comments from a media")
+    void getNumberOfCommentsFromMedia() throws Exception {
+        Comment comment1 = new Comment(1L, user.getUsername(), comment.get("userComment"), (Instant) null);
+        Comment comment2 = new Comment(null, user.getUsername(), comment.get("userComment"), (Instant) null);
+
+        media.setComments(List.of(comment1, comment2));
+
+        when(commentService.getNumberOfComments(media.getImdbId())).thenReturn((long) media.getComments().size());
+
+        mockMvc.perform(get("/comment/total/tt0111161").
+                contentType(MediaType.APPLICATION_JSON)
+        ).andExpect(status().isOk()).andExpect(content().json(String.valueOf(media.getComments().size())));
+    }
+
 }
