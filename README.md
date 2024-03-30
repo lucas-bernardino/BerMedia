@@ -136,7 +136,7 @@ BerMedia is a source for searching movies and TV Shows, where you can see other 
 
   ```
   # First, clone the repository
-  git clone https://github.com/lucas-bernardino/movie-app.git
+  git clone https://github.com/lucas-bernardino/BerMedia.git
 
   # Go to the directory that contains the starting script
   cd movie-app/server/server
