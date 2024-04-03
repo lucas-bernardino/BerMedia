@@ -1,0 +1,5 @@
+com/movie/server/controller/MediaControllerTest.class
+com/movie/server/service/CommentServiceTest.class
+com/movie/server/service/MediaServiceTest.class
+com/movie/server/ServerApplicationTests.class
+com/movie/server/controller/CommentControllerTest.class
